@@ -11,9 +11,8 @@ local ISManagementUI = {}
 ----------------------------------------------------------------------------------------------
 -- ------ Inherent from ISCollapsableWindowJoypad
 ISManagementUI = ISCollapsableWindowJoypad:derive("ISManagementUI")
-
 -- ------ Setting up Locals ------ --
-
+local ISManagementObject = require "ISManagementObject"
 
 ---Triggers when UI gets instantiated
 function ISManagementUI:createChildren()
@@ -30,12 +29,59 @@ function ISManagementUI:createChildren()
     self.tabs:setEqualTabWidth(false)
     self:addChild(self.tabs)
 
+    self.panel = ISPanelJoypad:new(0, 0, self.tabs.width, 100)
+    self.panel:initialise()
+    self.panel:instantiate()
+    self.panel.borderColor = {r=1, g=1, b=1, a=0.1}
+    self.tabs:addView("TestJoypad", self.panel)
+
+    local button1 = ISButton:new((self.panel:getWidth()/2) + 35, ((self.panel:getHeight()/2)-15) - 20, 70, 30, "Use")
+    button1:initialise()
+    button1:instantiate()
+    button1.borderColor = {r=1, g=1, b=1, a=0.1}
+    self.panel:addChild(button1)
+    local button2 = ISButton:new((self.panel:getWidth()/2) + 115, ((self.panel:getHeight()/2)-15) - 20, 70, 30, "Split")
+    button2:initialise();
+    button2:instantiate();
+    button2.borderColor = {r=1, g=1, b=1, a=0.1};
+    self.panel:addChild(button2)
+    local button3 = ISButton:new((self.panel:getWidth()/2) + 35, ((self.panel:getHeight()/2)-15) + 20, 70, 30, "Focus")
+    button3:initialise();
+    button3:instantiate();
+    button3.borderColor = {r=1, g=1, b=1, a=0.1};
+    self.panel:addChild(button3)
+    local button4 = ISButton:new((self.panel:getWidth()/2) + 115, ((self.panel:getHeight()/2)-15) + 20, 70, 30, "Disconnect")
+    button4:initialise();
+    button4:instantiate();
+    button4.borderColor = {r=1, g=1, b=1, a=0.1};
+    self.panel:addChild(button4)
+    print(tostring(self.panel.height))
+
+    self.panel:insertNewLineOfButtons(button1, button2)
+    self.panel:insertNewLineOfButtons(button3, button4)
+
+    self.panel.richText = ISRichTextPanel:new((self.panel.height/2)+10, 0, (self.panel:getWidth()/2+5) - (self.panel.height/2)+10, self.panel.height)
+    self.panel.richText:initialise();
+
+    self.panel:addChild(self.panel.richText);
+    self.panel.richText.background = false;
+    self.panel.richText.text = "<H2> Portail Automatiss <LINE><TEXT><INDENT:8><RGB:0,1,0> Battery charge: 25/100 <LINE><RGB:1,1,1><INDENT:0>States: <LINE><INDENT:8><RGB:1,0,0> Closed <RGB:1,1,1> | <RGB:0,1,0> Unlocked";
+    self.panel.richText.autosetheight = false
+    self.panel.richText:setMargins(0,18,0,0)
+    self.panel.richText:paginate();
+
+
 end
 
 ---Triggers once when UI is created
 function ISManagementUI:prerender()
     ISCollapsableWindowJoypad.prerender(self)
+    --local text = getScriptManager():FindItem("Base.Screwdriver"):getNormalTexture()
+    --local text = getTexture("gate_yay_01_8")
+    local text = getTexture("appliances_cooking_01_4")
 
+    --self.javaObject:DrawTextureTiled(text,6+(32-32)/2,self.tabs.tabHeight+self:titleBarHeight(),50,100,1,1,1,1)
+    self:drawTextureScaledAspect2(text, 4, self.tabs.tabHeight+self:titleBarHeight()+2, (self.panel.height/2)-4, self.panel.height-4, 1, 1, 1, 1)
 
 end
 
@@ -125,6 +171,12 @@ function ISManagementUI:new(x, y, width, height, character)
     o:setTitle("ManagementUI")
     o.character = character
     o.playerNum = character:getPlayerNum()
+    o.objects = {}
+    o.pages = {}
+
+
+
+    o.resizable = false
     return o
 end
 

@@ -9,7 +9,8 @@
 --- @class ISManagementObject
 local ISManagementObject = {}
 ----------------------------------------------------------------------------------------------
-
+-- ------ Inherent from ISPanelJoypad
+ISManagementObject = ISPanelJoypad:derive("ISManagementObject")
 
 
 
