@@ -102,6 +102,7 @@ function ISManagementUIContextMenu.onCreateWorldContextMenu(playerNum, contextMe
     local itemsUI = ModData.getOrCreate("ManagementUI")
 
     if thumpable then
+
         local alreadyInData = false
         local textureName = thumpable:getTextureName()
         for i=0, #itemsUI do

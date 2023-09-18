@@ -11,7 +11,9 @@ local ISManagementUI = {}
 ----------------------------------------------------------------------------------------------
 -- ------ Inherent from ISCollapsableWindowJoypad
 ISManagementUI = ISCollapsableWindowJoypad:derive("ISManagementUI")
+
 -- ------ Setting up Locals ------ --
+local ISManagementPanel = require "ISManagementPanel"
 local ISManagementObject = require "ISManagementObject"
 
 ---Triggers when UI gets instantiated
@@ -28,6 +30,8 @@ function ISManagementUI:createChildren()
     self.tabs:setAnchorBottom(true)
     self.tabs:setEqualTabWidth(false)
     self:addChild(self.tabs)
+
+    local pages = ISManagementPanel:new(0, 0, self.tabs.width, self.tabs.height)
 
     self.panel = ISPanelJoypad:new(0, 0, self.tabs.width, 100)
     self.panel:initialise()
@@ -55,7 +59,7 @@ function ISManagementUI:createChildren()
     button4:instantiate();
     button4.borderColor = {r=1, g=1, b=1, a=0.1};
     self.panel:addChild(button4)
-    print(tostring(self.panel.height))
+    print(Core.getTileScale())
 
     self.panel:insertNewLineOfButtons(button1, button2)
     self.panel:insertNewLineOfButtons(button3, button4)
@@ -80,9 +84,14 @@ function ISManagementUI:prerender()
     --local text = getTexture("gate_yay_01_8")
     local text = getTexture("appliances_cooking_01_4")
 
-    --self.javaObject:DrawTextureTiled(text,6+(32-32)/2,self.tabs.tabHeight+self:titleBarHeight(),50,100,1,1,1,1)
-    self:drawTextureScaledAspect2(text, 4, self.tabs.tabHeight+self:titleBarHeight()+2, (self.panel.height/2)-4, self.panel.height-4, 1, 1, 1, 1)
+    --Remember function ISMoveableInfoWindow:setTexture if wanted to set all square textures
+    --Outline. Maybe?
+    --self:drawTextureScaledAspect2(text, 4+1, self.tabs.tabHeight+self:titleBarHeight()+2-1, (self.panel.height/2)-4, self.panel.height-4, 1, 0, 0, 0)
+    --self:drawTextureScaledAspect2(text, 4-1, self.tabs.tabHeight+self:titleBarHeight()+2-1, (self.panel.height/2)-4, self.panel.height-4, 1, 0, 0, 0)
+    --self:drawTextureScaledAspect2(text, 4+1, self.tabs.tabHeight+self:titleBarHeight()+2+1, (self.panel.height/2)-4, self.panel.height-4, 1, 0, 0, 0)
+    --self:drawTextureScaledAspect2(text, 4-1, self.tabs.tabHeight+self:titleBarHeight()+2+1, (self.panel.height/2)-4, self.panel.height-4, 1, 0, 0, 0)
 
+    self:drawTextureScaledAspect2(text, 4, self.tabs.tabHeight+self:titleBarHeight()+2, (self.panel.height/2)-4, self.panel.height-4, 1, 1, 1, 1)
 end
 
 
@@ -172,10 +181,8 @@ function ISManagementUI:new(x, y, width, height, character)
     o.character = character
     o.playerNum = character:getPlayerNum()
     o.objects = {}
+    ---@type ISManagementPanel[]
     o.pages = {}
-
-
-
     o.resizable = false
     return o
 end
