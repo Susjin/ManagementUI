@@ -7,6 +7,10 @@
 
 --- Main file with all functions related to the ManagementUI
 --- @class ISManagementUI : ISCollapsableWindow
+--- @field character IsoPlayer
+--- @field playerNum number
+--- @field objects ISManagementObject[]
+--- @field pages ISManagementPanel[]
 local ISManagementUI = {}
 ----------------------------------------------------------------------------------------------
 -- ------ Inherent from ISCollapsableWindowJoypad
@@ -15,6 +19,31 @@ ISManagementUI = ISCollapsableWindowJoypad:derive("ISManagementUI")
 -- ------ Setting up Locals ------ --
 local ISManagementPanel = require "ISManagementPanel"
 local ISManagementObject = require "ISManagementObject"
+
+---addObjectToPage
+---@param page ISManagementPanel
+---@param texture string
+---@param name string
+---@param description string
+---@param buttonNames string[]
+---@param buttonFunctions function[]
+---@param buttonArgs any[]
+function ISManagementUI:addObjectToPage(page, texture, name, description, buttonNames, buttonFunctions, buttonArgs)
+    local ID = #page.objects+1
+    --self.richText.text = "<H2> Portail Automatiss <LINE><TEXT><INDENT:8><RGB:0,1,0> Battery charge: 25/100 <LINE><RGB:1,1,1><INDENT:0>States: <LINE><INDENT:8><RGB:1,0,0> Closed <RGB:1,1,1> | <RGB:0,1,0> Unlocked";
+    --local texture = getScriptManager():FindItem("Base.Screwdriver"):getNormalTexture()
+    --local texture = getTexture("gate_yay_01_8")
+    --local texture = getTexture("appliances_cooking_01_4")
+
+
+    page.objects[ID] = ISManagementObject:new(0, 100*(ID-1), page:getWidth(), texture, name, description, buttonNames, buttonFunctions, buttonArgs)
+    page.objects[ID]:initialise()
+    page.objects[ID]:instantiate()
+
+    page:addChild(page.objects[ID])
+
+
+end
 
 ---Triggers when UI gets instantiated
 function ISManagementUI:createChildren()
@@ -31,48 +60,16 @@ function ISManagementUI:createChildren()
     self.tabs:setEqualTabWidth(false)
     self:addChild(self.tabs)
 
-    local pages = ISManagementPanel:new(0, 0, self.tabs.width, self.tabs.height)
+    local page1 = ISManagementPanel:new(0, 0, self.tabs.width, self.tabs.height)
+    page1:setAnchorRight(true)
+    page1:setAnchorBottom(true)
+    page1:noBackground()
+    self.pages[1] = page1
+    self.tabs:addView("1", self.pages[1])
 
-    self.panel = ISPanelJoypad:new(0, 0, self.tabs.width, 100)
-    self.panel:initialise()
-    self.panel:instantiate()
-    self.panel.borderColor = {r=1, g=1, b=1, a=0.1}
-    self.tabs:addView("TestJoypad", self.panel)
-
-    local button1 = ISButton:new((self.panel:getWidth()/2) + 35, ((self.panel:getHeight()/2)-15) - 20, 70, 30, "Use")
-    button1:initialise()
-    button1:instantiate()
-    button1.borderColor = {r=1, g=1, b=1, a=0.1}
-    self.panel:addChild(button1)
-    local button2 = ISButton:new((self.panel:getWidth()/2) + 115, ((self.panel:getHeight()/2)-15) - 20, 70, 30, "Split")
-    button2:initialise();
-    button2:instantiate();
-    button2.borderColor = {r=1, g=1, b=1, a=0.1};
-    self.panel:addChild(button2)
-    local button3 = ISButton:new((self.panel:getWidth()/2) + 35, ((self.panel:getHeight()/2)-15) + 20, 70, 30, "Focus")
-    button3:initialise();
-    button3:instantiate();
-    button3.borderColor = {r=1, g=1, b=1, a=0.1};
-    self.panel:addChild(button3)
-    local button4 = ISButton:new((self.panel:getWidth()/2) + 115, ((self.panel:getHeight()/2)-15) + 20, 70, 30, "Disconnect")
-    button4:initialise();
-    button4:instantiate();
-    button4.borderColor = {r=1, g=1, b=1, a=0.1};
-    self.panel:addChild(button4)
-    print(Core.getTileScale())
-
-    self.panel:insertNewLineOfButtons(button1, button2)
-    self.panel:insertNewLineOfButtons(button3, button4)
-
-    self.panel.richText = ISRichTextPanel:new((self.panel.height/2)+10, 0, (self.panel:getWidth()/2+5) - (self.panel.height/2)+10, self.panel.height)
-    self.panel.richText:initialise();
-
-    self.panel:addChild(self.panel.richText);
-    self.panel.richText.background = false;
-    self.panel.richText.text = "<H2> Portail Automatiss <LINE><TEXT><INDENT:8><RGB:0,1,0> Battery charge: 25/100 <LINE><RGB:1,1,1><INDENT:0>States: <LINE><INDENT:8><RGB:1,0,0> Closed <RGB:1,1,1> | <RGB:0,1,0> Unlocked";
-    self.panel.richText.autosetheight = false
-    self.panel.richText:setMargins(0,18,0,0)
-    self.panel.richText:paginate();
+    self:addObjectToPage(self.pages[1], "gate_yay_01_8", "Portail Automatiss", " <INDENT:8><RGB:0,1,0> Battery charge: 25/100 <LINE><RGB:1,1,1><INDENT:0>States: <LINE><INDENT:8><RGB:1,0,0> Closed <RGB:1,1,1> | <RGB:0,1,0> Unlocked", {"Use", "Lock", "Copy", "Disconnect"})
+    self:addObjectToPage(self.pages[1], "appliances_cooking_01_4", "Base Oven", " <INDENT:8><RGB:0,1,0> Temperature: 300K <LINE><RGB:1,1,1>States: <LINE><INDENT:8><RGB:1,0,0> Off <RGB:1,1,1> | <RGB:0,1,0> Timer", {"Turn On", "Timer", "PlaceHolde", "PlaceHolde"})
+    self:addObjectToPage(self.pages[1], getTexture("appliances_misc_01_0"), "Generator - ID 1457", " <INDENT:8> Branch Setting: <RGB:1,1,0> Split Power <LINE><RGB:1,1,1><INDENT:0>States: <LINE><INDENT:8><RGB:1,0,0> Off <RGB:1,1,1> | <RGB:0,1,0> Fuel: 65% <RGB:1,1,1> | <RGB:1,1,0> Condition: 96%", {"Turn On", "Split", "Focus", "Disable"})
 
 
 end
@@ -80,18 +77,7 @@ end
 ---Triggers once when UI is created
 function ISManagementUI:prerender()
     ISCollapsableWindowJoypad.prerender(self)
-    --local text = getScriptManager():FindItem("Base.Screwdriver"):getNormalTexture()
-    --local text = getTexture("gate_yay_01_8")
-    local text = getTexture("appliances_cooking_01_4")
 
-    --Remember function ISMoveableInfoWindow:setTexture if wanted to set all square textures
-    --Outline. Maybe?
-    --self:drawTextureScaledAspect2(text, 4+1, self.tabs.tabHeight+self:titleBarHeight()+2-1, (self.panel.height/2)-4, self.panel.height-4, 1, 0, 0, 0)
-    --self:drawTextureScaledAspect2(text, 4-1, self.tabs.tabHeight+self:titleBarHeight()+2-1, (self.panel.height/2)-4, self.panel.height-4, 1, 0, 0, 0)
-    --self:drawTextureScaledAspect2(text, 4+1, self.tabs.tabHeight+self:titleBarHeight()+2+1, (self.panel.height/2)-4, self.panel.height-4, 1, 0, 0, 0)
-    --self:drawTextureScaledAspect2(text, 4-1, self.tabs.tabHeight+self:titleBarHeight()+2+1, (self.panel.height/2)-4, self.panel.height-4, 1, 0, 0, 0)
-
-    self:drawTextureScaledAspect2(text, 4, self.tabs.tabHeight+self:titleBarHeight()+2, (self.panel.height/2)-4, self.panel.height-4, 1, 1, 1, 1)
 end
 
 
@@ -175,13 +161,16 @@ end
 ---@param width number Width of the panel
 ---@param height number Height of the panel
 ---@param character IsoPlayer Player that's rendering the interface
+---@return ISManagementUI
 function ISManagementUI:new(x, y, width, height, character)
     local o = ISCollapsableWindowJoypad.new(self, x, y, width, height)
+    setmetatable(o, self)
+    self.__index = self
+
     o:setTitle("ManagementUI")
     o.character = character
     o.playerNum = character:getPlayerNum()
     o.objects = {}
-    ---@type ISManagementPanel[]
     o.pages = {}
     o.resizable = false
     return o
