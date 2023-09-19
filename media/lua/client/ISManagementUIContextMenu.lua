@@ -10,7 +10,7 @@
 local ISManagementUIContextMenu = {}
 ----------------------------------------------------------------------------------------------
 -- ------ Setting up locals ------ --
-local ISManagementUI = require "ISManagementUI"
+local ISManagementPanel = require "ISManagementPanel"
 
 
 -- ------ ContextMenu functions ------ --
@@ -22,11 +22,11 @@ function ISManagementUIContextMenu.onShowTestUI(player, playerNum)
     local w = 400
     local h = getPlayerScreenHeight(playerNum) - 250 * 2
 
-    local ManagementUI = ISManagementUI:new(x, y, w, h, player, playerInventory)
+    local ManagementUI = ISManagementPanel:new(x, y, w, h, player, playerInventory)
     ManagementUI:initialise()
     ManagementUI:instantiate()
     if playerNum == 0 and player:getJoypadBind() == -1 then
-        ISLayoutManager.RegisterWindow('managementui', ISManagementUI, ManagementUI)
+        ISLayoutManager.RegisterWindow('managementui', ISManagementPanel, ManagementUI)
     end
     ManagementUI:addToUIManager()
 
