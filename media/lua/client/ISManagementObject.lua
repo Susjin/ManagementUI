@@ -21,25 +21,25 @@ ISManagementObject = ISPanelJoypad:derive("ISManagementObject")
 
 function ISManagementObject:createChildren()
 
-    local button1 = ISButton:new((self:getWidth()/2) + 35, ((self:getHeight()/2)-15) - 20, 70, 30, self.buttonNames[1], self.buttonArgs[1], self.buttonFunctions[1])
+    local button1 = ISButton:new((self:getWidth()/2) + 35, (self:getHeight()/2)-15 - 20, 70, 30, self.buttonNames[1], self.buttonArgs[1], self.buttonFunctions[1])
     button1:initialise()
     button1:instantiate()
     button1.borderColor = {r=1, g=1, b=1, a=0.1}
     self.button1 = button1
     self:addChild(button1)
-    local button2 = ISButton:new((self:getWidth()/2) + 115, ((self:getHeight()/2)-15) - 20, 70, 30, self.buttonNames[2], self.buttonArgs[2], self.buttonFunctions[2])
+    local button2 = ISButton:new((self:getWidth()/2) + 115, (self:getHeight()/2)-15 - 20, 70, 30, self.buttonNames[2], self.buttonArgs[2], self.buttonFunctions[2])
     button2:initialise();
     button2:instantiate();
     button2.borderColor = {r=1, g=1, b=1, a=0.1};
     self.button2 = button2
     self:addChild(button2)
-    local button3 = ISButton:new((self:getWidth()/2) + 35, ((self:getHeight()/2)-15) + 20, 70, 30, self.buttonNames[3], self.buttonArgs[3], self.buttonFunctions[3])
+    local button3 = ISButton:new((self:getWidth()/2) + 35, (self:getHeight()/2)-15 + 20, 70, 30, self.buttonNames[3], self.buttonArgs[3], self.buttonFunctions[3])
     button3:initialise();
     button3:instantiate();
     button3.borderColor = {r=1, g=1, b=1, a=0.1};
     self.button3 = button3
     self:addChild(button3)
-    local button4 = ISButton:new((self:getWidth()/2) + 115, ((self:getHeight()/2)-15) + 20, 70, 30, self.buttonNames[4], self.buttonArgs[4], self.buttonFunctions[4])
+    local button4 = ISButton:new((self:getWidth()/2) + 115, (self:getHeight()/2)-15 + 20, 70, 30, self.buttonNames[4], self.buttonArgs[4], self.buttonFunctions[4])
     button4:initialise()
     button4:instantiate()
     button4.borderColor = {r=1, g=1, b=1, a=0.1}
@@ -77,8 +77,8 @@ function ISManagementObject:prerender()
 end
 
 ---@return ISManagementObject
-function ISManagementObject:new(x, y, width, texture, name, description, buttonNames, buttonFunctions, buttonArgs)
-    local o = ISPanelJoypad:new(x, y, width, 100)
+function ISManagementObject:new(y, width, texture, name, description, buttonNames, buttonFunctions, buttonArgs)
+    local o = ISPanelJoypad:new(0, y, width, 100)
     setmetatable(o, self)
     self.__index = self
 
@@ -89,7 +89,6 @@ function ISManagementObject:new(x, y, width, texture, name, description, buttonN
     o.buttonNames = buttonNames or {}
     o.buttonFunctions = buttonFunctions or {}
     o.buttonArgs = buttonArgs or {}
-
 
 
     return o

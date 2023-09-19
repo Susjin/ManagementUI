@@ -4,9 +4,7 @@ require "ISUI/ISCollapsableWindowJoypad"
 require "ISUI/ISScrollingListBox"
 require "ISUI/ISTabPanel"
 
----@class ISTestUI : ISCollapsableWindow
 local ISTestUI = ISCollapsableWindowJoypad:derive("ISTestUI")
----@type ISScrollingListBox
 local ISTestList = ISScrollingListBox:derive("ISTestList")
 
 local FONT_HGT_SMALL = getTextManager():getFontHeight(UIFont.Small)
@@ -17,12 +15,6 @@ return nil
 ---------------------- ISTestList overrides ----------------------
 
 function ISTestList:addItem(name, object)
---- @class ItemObject
---- @field name string Text to be displayed
---- @field object string Name of the Texture to be displayed
---- @field tooltip ISToolTip Tooltip for the item (can be nil)
---- @field itemindex number Position of that item
---- @field height number Height of the item
 	local i = {}
 	i.name=name;
 	i.object=object;
@@ -35,10 +27,6 @@ function ISTestList:addItem(name, object)
 	return i;
 end
 
----doDrawItem
----@param y number
----@param item ItemObject
----@param _ boolean
 function ISTestList:doDrawItem(y, item, _)
 	if y + self:getYScroll() >= self.height then return y + item.height end
 	if y + item.height + self:getYScroll() <= 0 then return y + item.height end
@@ -194,7 +182,6 @@ end
 
 function ISTestList:new(x, y, width, height, character)
 	local o = ISScrollingListBox.new(self, x, y, width, height)
-	---@type ItemObject[]
 	local items = {}
 	o.items = items
 	o.character = character

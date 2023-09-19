@@ -5,7 +5,7 @@
 --- Steam profile: https://steamcommunity.com/id/peter_pg/
 --- GitHub Repository: https://github.com/Susjin/ManagementUI
 
---- Main file with all functions related to the ManagementUI
+--- Main file with all functions related to the panel on the ManagementUI
 --- @class ISManagementPanel : ISCollapsableWindow
 --- @field character IsoPlayer
 --- @field playerNum number
@@ -36,7 +36,7 @@ function ISManagementPanel:addObjectToPage(page, texture, name, description, but
     --local texture = getTexture("appliances_cooking_01_4")
 
 
-    page.objects[ID] = ISManagementObject:new(0, 100*(ID-1), page:getWidth(), texture, name, description, buttonNames, buttonFunctions, buttonArgs)
+    page.objects[ID] = ISManagementObject:new(100*(ID-1), page:getWidth(), texture, name, description, buttonNames, buttonFunctions, buttonArgs)
     page.objects[ID]:initialise()
     page.objects[ID]:instantiate()
 
