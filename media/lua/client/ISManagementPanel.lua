@@ -11,6 +11,7 @@
 --- @field playerNum number
 --- @field objects ISManagementObject[]
 --- @field pages ISManagementPage[]
+--- @field manager ISUIManager
 local ISManagementPanel = {}
 ----------------------------------------------------------------------------------------------
 -- ------ Inherent from ISCollapsableWindowJoypad
@@ -30,28 +31,48 @@ local ISManagementObject = require "ISManagementObject"
 ---@param buttonArgs any[]
 function ISManagementPanel:addObjectToPage(page, texture, name, description, buttonNames, buttonFunctions, buttonArgs)
     local ID = #page.objects+1
-    --self.richText.text = "<H2> Portail Automatiss <LINE><TEXT><INDENT:8><RGB:0,1,0> Battery charge: 25/100 <LINE><RGB:1,1,1><INDENT:0>States: <LINE><INDENT:8><RGB:1,0,0> Closed <RGB:1,1,1> | <RGB:0,1,0> Unlocked";
-    --local texture = getScriptManager():FindItem("Base.Screwdriver"):getNormalTexture()
-    --local texture = getTexture("gate_yay_01_8")
-    --local texture = getTexture("appliances_cooking_01_4")
-
 
     page.objects[ID] = ISManagementObject:new(100*(ID-1), page:getWidth(), texture, name, description, buttonNames, buttonFunctions, buttonArgs)
     page.objects[ID]:initialise()
     page.objects[ID]:instantiate()
 
     page:addChild(page.objects[ID])
+end
 
+
+--[[**********************************************************************************]]--
+
+------------------ Functions related to the Panel creation ------------------
+
+function ISManagementPanel:createPages()
+    if #self.pages ~= self.manager.numPages then
+        if #self.pages < self.manager.numPages then
+            for i = #self.pages + 1, self.manager.numPages do
+                self.pages[i] = ISManagementPage:new(0, 0, self.tabs.width, self.tabs.height)
+                self.tabs:addView(string.format("Page %d", i), self.pages[i])
+            end
+        else
+            for i = #self.pages, self.manager.numPages + 1, -1 do
+                self.tabs:removeView(self.pages[i])
+            end
+        end
+    end
+end
+
+function ISManagementPanel:createObjects()
 
 end
+
+
+--[[**********************************************************************************]]--
+
+------------------ Functions related to the Panel UIElement ------------------
 
 ---Triggers when UI gets instantiated
 function ISManagementPanel:createChildren()
     ISCollapsableWindowJoypad.createChildren(self)
     local th = self:titleBarHeight()
     local rh = self:resizeWidgetHeight()
-
-    --Get all the different objects before setting up tabs
 
     --Create tab panel
     self.tabs = ISTabPanel:new(0, th, self.width, self.height-th-rh)
@@ -60,13 +81,15 @@ function ISManagementPanel:createChildren()
     self.tabs:setEqualTabWidth(false)
     self:addChild(self.tabs)
 
+    --[[
+    --Creating pages
     self.pages[1] = ISManagementPage:new(0, 0, self.tabs.width, self.tabs.height)
     self.tabs:addView("1", self.pages[1])
 
     self:addObjectToPage(self.pages[1], "gate_yay_01_8", "Portail Automatiss", " <INDENT:8><RGB:0,1,0> Battery charge: 25/100 <LINE><RGB:1,1,1><INDENT:0>States: <LINE><INDENT:8><RGB:1,0,0> Closed <RGB:1,1,1> | <RGB:0,1,0> Unlocked", {"Use", "Lock", "Copy", "Disconnect"})
     self:addObjectToPage(self.pages[1], "appliances_cooking_01_4", "Base Oven", " <INDENT:8><RGB:0,1,0> Temperature: 300K <LINE><RGB:1,1,1>States: <LINE><INDENT:8><RGB:1,0,0> Off <RGB:1,1,1> | <RGB:0,1,0> Timer", {"Turn On", "Timer", "PlaceHolde", "PlaceHolde"})
     self:addObjectToPage(self.pages[1], getTexture("appliances_misc_01_0"), "Generator - ID 1457", " <INDENT:8> Branch Setting: <RGB:1,1,0> Split Power <LINE><RGB:1,1,1><INDENT:0>States: <LINE><INDENT:8><RGB:1,0,0> Off <RGB:1,1,1> | <RGB:0,1,0> Fuel: 65% <RGB:1,1,1> | <RGB:1,1,0> Condition: 96%", {"Turn On", "Split", "Focus", "Disable"})
-
+    --]]
 
 end
 
@@ -157,11 +180,13 @@ end
 ---@param width number Width of the panel
 ---@param height number Height of the panel
 ---@param character IsoPlayer Player that's rendering the interface
+---@param manager ISUIManager Manager of all the ManagementUI elements
 ---@return ISManagementPanel
-function ISManagementPanel:new(x, y, width, height, character)
+function ISManagementPanel:new(x, y, width, height, character, manager)
     local o = ISCollapsableWindowJoypad.new(self, x, y, width, height)
     setmetatable(o, self)
     self.__index = self
+    o.manager = manager
 
     o:setTitle("ManagementUI")
     o.character = character

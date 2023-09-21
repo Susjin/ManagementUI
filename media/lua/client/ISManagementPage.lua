@@ -12,6 +12,15 @@ local ISManagementPage = {}
 -- ------ Inherent from ISPanelJoypad
 ISManagementPage = ISPanelJoypad:derive("ISManagementPage")
 
+local pairs = pairs
+
+function ISManagementPage:clearAllObjects()
+    for _, obj in pairs(self.objects) do
+        obj:clearChildren()
+        self:removeChild(obj)
+    end
+end
+
 ---@return ISManagementPage
 function ISManagementPage:new(x, y, width, height)
     local o = ISPanelJoypad:new(x, y, width, height)
