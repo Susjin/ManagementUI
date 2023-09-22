@@ -51,78 +51,49 @@ end
 
 
 -- ------ ContextMenu functions ------ --
-function ISManagementUIContextMenu.onShowTestUI(player, playerNum)
-    local playerInventory = getPlayerInventory(playerNum)
-
-    local x = getPlayerScreenLeft(playerNum) + 100
-    local y = getPlayerScreenTop(playerNum) + 50
-    local w = 400
-    local h = getPlayerScreenHeight(playerNum) - 250 * 2
-
-    local ManagementUI = ISManagementPanel:new(x, y, w, h, player, playerInventory)
-    ManagementUI:initialise()
-    ManagementUI:instantiate()
-
-    ManagementUI:addToUIManager()
-
-    if playerInventory.joyfocus then
-        playerInventory.drawJoypadFocus = false
-        setJoypadFocus(playerNum, ManagementUI)
+function ISManagementUIContextMenu.openUI(player)
+    if UIManager.panel == nil then
+        UIManager:createManagementPanel(player)
+    else
+        UIManager.panel:setVisible(true)
     end
 end
 
 function ISManagementUIContextMenu.addObject(object, button, player)
-    local tempTable = {}
-    tempTable.modData = itemsUI
+    if button.internal == "OK" then
+        ---@type IsoGridSquare
+        local square = object.object:getSquare()
+        local objectSquare = {x = square:getX(), y = square:getY(), z = square:getZ()}
 
-    if instanceof(object, "InventoryItem") and not button then
-        table.insert(tempTable.modData, object:getFullType())
-    elseif instanceof(object, "IsoThumpable") and button then
-        if button.internal == "OK" then
-            local textBoxText = button.parent.entry:getText()
-            table.insert(tempTable.modData, {name = textBoxText, texture = object:getTextureName()})
-        end
+        UIManager:addObject(button.parent.entry:getText(), "", objectSquare, object.type, 2, {"Test1", "Test2"})
+
+        player:Say("Saved")
     end
-
-    for i, data in pairs(tempTable.modData) do
-        itemsUI[i] = data
-    end
-
-    player:Say("Saved")
 end
 
-function ISManagementUIContextMenu.textBoxName(object, player)
-    local textBox = ISTextBox:new(0, 0, 280, 180, "Specify entry name", "defaultTexture" , object, ISManagementUIContextMenu.addObject, player:getPlayerNum(), player)
+function ISManagementUIContextMenu.removeObject(player, button)
+    if button.internal == "OK" then
+        local done = UIManager:removeObjectByName(button.parent.entry:getText())
+        if done then
+            player:Say("Removed")
+        else
+            player:Say("Not Found")
+        end
+    end
+end
+
+function ISManagementUIContextMenu.textBoxAddObject(object, player)
+    local textBox = ISTextBox:new(0, 0, 280, 180, "Insert object name to add", "DEBUG" , object, ISManagementUIContextMenu.addObject, player:getPlayerNum(), player)
     textBox:initialise()
     textBox:addToUIManager()
     textBox.entry:focus()
 end
 
-
-function ISManagementUIContextMenu.removeFromModData(object, player)
-    local itemsUI = ModData.getOrCreate("ManagementUI")
-    local tempTable = {}
-    tempTable.modData = itemsUI
-
-    for i, data in pairs(tempTable.modData) do
-        if instanceof(object, "InventoryItem") then
-            if data == object:getFullType() then
-                table.remove(tempTable.modData, i)
-                break
-            end
-        elseif instanceof(object, "IsoThumpable") then
-            if data.texture == object:getTextureName() then
-                table.remove(tempTable.modData, i)
-                break
-            end
-        end
-    end
-
-    for i, data in pairs(tempTable.modData) do
-        itemsUI[i] = data
-    end
-
-    player:Say("Deleted")
+function ISManagementUIContextMenu.textBoxRemoveObject(player)
+    local textBox = ISTextBox:new(0, 0, 280, 180, "Insert object name to remove", "DEBUG" , player, ISManagementUIContextMenu.removeObject, player:getPlayerNum())
+    textBox:initialise()
+    textBox:addToUIManager()
+    textBox.entry:focus()
 end
 
 ---onCreateWorldContextMenu
@@ -151,15 +122,14 @@ function ISManagementUIContextMenu.onCreateWorldContextMenu(playerNum, contextMe
         if instanceof(worldObjects[i], "IsoLightSwitch") then
             objects.lightSwitch = worldObjects[i]
         end
-
     end
 
     for i, object in pairs(objects) do
-       contextMenu:addOption(string.format("Add '%s' to the UI", objSheet[i]), object, ISManagementUIContextMenu.textBoxName, player)
-
-
-
+       contextMenu:addOption(string.format("Add '%s' to the UI", objSheet[i]), {object = object, type = objSheet[i]}, ISManagementUIContextMenu.textBoxAddObject, player)
     end
+    contextMenu:addOption("Remove Object from the UI", player, ISManagementUIContextMenu.textBoxRemoveObject)
+
+    contextMenu:addOption("Open ManagementUI", player, ISManagementUIContextMenu.openUI)
 end
 Events.OnFillWorldObjectContextMenu.Add(ISManagementUIContextMenu.onCreateWorldContextMenu)
 

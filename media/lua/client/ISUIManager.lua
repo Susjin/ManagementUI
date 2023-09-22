@@ -93,7 +93,6 @@ end
 
 function ISUIManager:validateObjects()
     local newObjects = {}
-
     ---@param obj PreUIObject
     for _, obj in pairs(self.objects) do
         local objectSquare = getCell():getGridSquare(obj.squarePos.x, obj.squarePos.y, obj.squarePos.z)
@@ -111,6 +110,13 @@ function ISUIManager:validateObjects()
     end
 
     self.validatedObjects = newObjects
+    self:calculateValidatedPages()
+end
+
+function ISUIManager:calculateValidatedPages()
+    local pages = #self.validatedObjects/self.maxObjects
+    pages = pages > 0 and math.ceil(pages) or 0
+    self.numPages = pages
 end
 
 function ISUIManager:createManagementPanel(player)
@@ -121,6 +127,7 @@ function ISUIManager:createManagementPanel(player)
     self.panel:initialise()
     self.panel:instantiate()
     self.panel:addToUIManager()
+    self.panel:setVisible(true)
 
     --[[ Check if needed
     if self.playerNum == 0 and self.character:getJoypadBind() == -1 then

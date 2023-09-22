@@ -86,6 +86,21 @@ function ISManagementPanel:createObjects()
     end
 end
 
+function ISManagementPanel:setVisibleFunction()
+    self.visibleTarget = self.manager
+    local function triggerSetVisible(_, panel)
+        if not panel:isVisible() then
+            for i = 1, #panel.pages do
+                panel.pages[i]:clearAllObjects()
+                panel.tabs:removeView(panel.pages[i])
+            end
+            panel.manager:validateObjects()
+            panel:createPages()
+            panel:createObjects()
+        end
+    end
+    self.visibleFunction = triggerSetVisible
+end
 
 --[[**********************************************************************************]]--
 
@@ -199,7 +214,7 @@ end
 
 ---Triggers when UI is closed
 function ISManagementPanel:close()
-    self:removeFromUIManager()
+    self:setVisible(false)
 end
 
 ---Creates a ManagementUI object
@@ -211,6 +226,7 @@ end
 ---@param manager ISUIManager Manager of all the ManagementUI elements
 ---@return ISManagementPanel
 function ISManagementPanel:new(title, x, y, width, height, character, manager)
+    ---@type ISManagementPanel
     local o = ISCollapsableWindowJoypad.new(self, x, y, width, height)
     setmetatable(o, self)
     self.__index = self
@@ -222,6 +238,7 @@ function ISManagementPanel:new(title, x, y, width, height, character, manager)
     o.numObjects = 0
     o.pages = {}
     o:setResizeable(false)
+    o:setVisibleFunction()
     return o
 end
 
