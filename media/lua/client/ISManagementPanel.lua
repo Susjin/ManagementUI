@@ -9,7 +9,7 @@
 --- @class ISManagementPanel : ISCollapsableWindow
 --- @field character IsoPlayer
 --- @field playerNum number
---- @field objects ISManagementObject[]
+--- @field numObjects number
 --- @field pages ISManagementPage[]
 --- @field manager ISUIManager
 local ISManagementPanel = {}
@@ -19,8 +19,8 @@ ISManagementPanel = ISCollapsableWindowJoypad:derive("ISManagementPanel")
 
 -- ------ Setting up Locals ------ --
 local ISManagementPage = require "ISManagementPage"
-local ISManagementObject = require "ISManagementObject"
 
+--[[
 ---addObjectToPage
 ---@param page ISManagementPage
 ---@param texture string
@@ -38,7 +38,7 @@ function ISManagementPanel:addObjectToPage(page, texture, name, description, but
 
     page:addChild(page.objects[ID])
 end
-
+--]]
 
 --[[**********************************************************************************]]--
 
@@ -53,6 +53,7 @@ function ISManagementPanel:createPages()
             end
         else
             for i = #self.pages, self.manager.numPages + 1, -1 do
+                self.pages[i]:clearAllObjects()
                 self.tabs:removeView(self.pages[i])
             end
         end
@@ -60,7 +61,29 @@ function ISManagementPanel:createPages()
 end
 
 function ISManagementPanel:createObjects()
-
+    --[[
+    for i = 1, self.manager.numPages do
+        local pos = 1
+        local actualObjectPos = (self.manager.maxObjects*(i-1))
+        for j = 1 + actualObjectPos, self.manager.maxObjects + actualObjectPos do
+            if j > #self.manager.validatedObjects then
+                break
+            end
+            self.pages[i]:addObjectToPage(self.manager.validatedObjects[j], pos, self.width)
+            self.numObjects = self.numObjects + 1
+            pos = pos + 1
+        end
+    end
+    ]]--
+    for i = 1, self.manager.numPages do
+        for j = 1, self.manager.maxObjects do
+            if self.numObjects >= #self.manager.validatedObjects then
+                break
+            end
+            self.pages[i]:addObjectToPage(self.manager.validatedObjects[self.numObjects+1], j, self.width)
+            self.numObjects = self.numObjects + 1
+        end
+    end
 end
 
 
@@ -81,6 +104,10 @@ function ISManagementPanel:createChildren()
     self.tabs:setEqualTabWidth(false)
     self:addChild(self.tabs)
 
+
+    self:createPages()
+    self:createObjects()
+
     --[[
     --Creating pages
     self.pages[1] = ISManagementPage:new(0, 0, self.tabs.width, self.tabs.height)
@@ -93,11 +120,12 @@ function ISManagementPanel:createChildren()
 
 end
 
+--[[ Temporary
 ---Triggers once when UI is created
 function ISManagementPanel:prerender()
     ISCollapsableWindowJoypad.prerender(self)
 
-end
+end]]
 
 
 ---Triggers when UI gains the Joypad Focus
@@ -182,18 +210,18 @@ end
 ---@param character IsoPlayer Player that's rendering the interface
 ---@param manager ISUIManager Manager of all the ManagementUI elements
 ---@return ISManagementPanel
-function ISManagementPanel:new(x, y, width, height, character, manager)
+function ISManagementPanel:new(title, x, y, width, height, character, manager)
     local o = ISCollapsableWindowJoypad.new(self, x, y, width, height)
     setmetatable(o, self)
     self.__index = self
     o.manager = manager
 
-    o:setTitle("ManagementUI")
+    o:setTitle(title)
     o.character = character
     o.playerNum = character:getPlayerNum()
-    o.objects = {}
+    o.numObjects = 0
     o.pages = {}
-    o.resizable = false
+    o:setResizeable(false)
     return o
 end
 

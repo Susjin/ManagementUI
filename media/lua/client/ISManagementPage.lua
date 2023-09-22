@@ -9,8 +9,11 @@
 --- @field objects ISManagementObject[]
 local ISManagementPage = {}
 ----------------------------------------------------------------------------------------------
--- ------ Inherent from ISPanelJoypad
+-- ------ Inherent from ISPanelJoypad -- ------
 ISManagementPage = ISPanelJoypad:derive("ISManagementPage")
+
+-- ------ Setting up locals -- ------
+local ISManagementObject = require "ISManagementObject"
 
 local pairs = pairs
 
@@ -21,9 +24,23 @@ function ISManagementPage:clearAllObjects()
     end
 end
 
----@return ISManagementPage
-function ISManagementPage:new(x, y, width, height)
-    local o = ISPanelJoypad:new(x, y, width, height)
+---addObjectToPage
+---@param preUIObject PreUIObject
+function ISManagementPage:addObjectToPage(preUIObject, pos, width)
+    local object = ISManagementObject:new(100*(pos-1), width, preUIObject.isoObject, preUIObject.name, preUIObject.description, preUIObject.numButtons, preUIObject.buttonNames, preUIObject.onClickButton, preUIObject.param1, preUIObject.param2, preUIObject.param3, preUIObject.param4)
+    object:initialise()
+    object:instantiate()
+    self.objects[pos] = object
+    self:addChild(self.objects[pos])
+end
+
+
+---Creates a new page for the ManagementPanel
+---@param y number
+---@param width number
+---@param height number
+function ISManagementPage:new(y, width, height)
+    local o = ISPanelJoypad:new(0, y, width, height)
     setmetatable(o, self)
     self.__index = self
     o.objects = {}

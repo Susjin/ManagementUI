@@ -10,7 +10,44 @@
 local ISManagementUIContextMenu = {}
 ----------------------------------------------------------------------------------------------
 -- ------ Setting up locals ------ --
-local ISManagementPanel = require "ISManagementPanel"
+local ISUIManager = require "ISUIManager"
+---@type ISUIManager
+local UIManager = {}
+
+local pairs = pairs
+
+
+function ISManagementUIContextMenu.getUIManagerFromModData()
+    local managers = ModData.getOrCreate("ManagementUIManagers")
+    if #managers > 0 then
+        local found = false
+        for _, manager in pairs(managers) do
+            if manager.title == "TestManagementUI" then
+                UIManager = manager
+                found = true
+                break
+            end
+        end
+        if not found then
+            UIManager = ISUIManager:initialiseUIManager("TestManagementUI", 8, 6, false)
+            managers[#managers+1] = UIManager
+        end
+    else
+        UIManager = ISUIManager:initialiseUIManager("TestManagementUI", 8, 6, false)
+        managers[#managers+1] = UIManager
+    end
+end
+
+function ISManagementUIContextMenu.saveUIManagerToModData()
+    UIManager:nullifyEverythingForSaving()
+    local managers = ModData.getOrCreate("ManagementUIManagers")
+    for _, manager in pairs(managers) do
+        if manager.title == "TestManagementUI" then
+            manager = UIManager
+        end
+    end
+    managers[#managers+1] = UIManager
+end
 
 
 -- ------ ContextMenu functions ------ --
@@ -25,9 +62,7 @@ function ISManagementUIContextMenu.onShowTestUI(player, playerNum)
     local ManagementUI = ISManagementPanel:new(x, y, w, h, player, playerInventory)
     ManagementUI:initialise()
     ManagementUI:instantiate()
-    if playerNum == 0 and player:getJoypadBind() == -1 then
-        ISLayoutManager.RegisterWindow('managementui', ISManagementPanel, ManagementUI)
-    end
+
     ManagementUI:addToUIManager()
 
     if playerInventory.joyfocus then
@@ -36,8 +71,7 @@ function ISManagementUIContextMenu.onShowTestUI(player, playerNum)
     end
 end
 
-function ISManagementUIContextMenu.addToModData(object, button, player)
-    local itemsUI = ModData.getOrCreate("ManagementUI")
+function ISManagementUIContextMenu.addObject(object, button, player)
     local tempTable = {}
     tempTable.modData = itemsUI
 
@@ -57,12 +91,13 @@ function ISManagementUIContextMenu.addToModData(object, button, player)
     player:Say("Saved")
 end
 
-function ISManagementUIContextMenu.textBoxRename(object, player)
-    local textBox = ISTextBox:new(0, 0, 280, 180, "Specify entry name", "defaultTexture" , object, ISManagementUIContextMenu.addToModData, player:getPlayerNum(), player)
+function ISManagementUIContextMenu.textBoxName(object, player)
+    local textBox = ISTextBox:new(0, 0, 280, 180, "Specify entry name", "defaultTexture" , object, ISManagementUIContextMenu.addObject, player:getPlayerNum(), player)
     textBox:initialise()
     textBox:addToUIManager()
     textBox.entry:focus()
 end
+
 
 function ISManagementUIContextMenu.removeFromModData(object, player)
     local itemsUI = ModData.getOrCreate("ManagementUI")
@@ -90,64 +125,47 @@ function ISManagementUIContextMenu.removeFromModData(object, player)
     player:Say("Deleted")
 end
 
+---onCreateWorldContextMenu
+---@param playerNum number
+---@param contextMenu ISContextMenu
+---@param worldObjects IsoObject[]
 function ISManagementUIContextMenu.onCreateWorldContextMenu(playerNum, contextMenu, worldObjects)
+    local objSheet = {thumpable = "IsoThumpable", door = "IsoDoor", generator = "IsoGenerator", stove = "IsoStove", lightSwitch = "IsoLightSwitch"}
+
     local player = getSpecificPlayer(playerNum)
     ---@type IsoThumpable
-    local thumpable
+    local objects = {}
     for i = 1, #worldObjects do
         if instanceof(worldObjects[i], "IsoThumpable") then
-            thumpable = worldObjects[i]
+            objects.thumpable = worldObjects[i]
         end
+        if instanceof(worldObjects[i], "IsoDoor") then
+            objects.door = worldObjects[i]
+        end
+        if instanceof(worldObjects[i], "IsoGenerator") then
+            objects.generator = worldObjects[i]
+        end
+        if instanceof(worldObjects[i], "IsoStove") then
+            objects.stove = worldObjects[i]
+        end
+        if instanceof(worldObjects[i], "IsoLightSwitch") then
+            objects.lightSwitch = worldObjects[i]
+        end
+
     end
-    local itemsUI = ModData.getOrCreate("ManagementUI")
 
-    if thumpable then
+    for i, object in pairs(objects) do
+       contextMenu:addOption(string.format("Add '%s' to the UI", objSheet[i]), object, ISManagementUIContextMenu.textBoxName, player)
 
-        local alreadyInData = false
-        local textureName = thumpable:getTextureName()
-        for i=0, #itemsUI do
-            if type(itemsUI[i]) == "table" and itemsUI[i].texture == textureName then
-                alreadyInData = true
-                break
-            end
-        end
-        if not alreadyInData then
-            contextMenu:addOption("Add to ManagementUI", thumpable, ISManagementUIContextMenu.textBoxRename, player)
-        else
-            contextMenu:addOption("Remove from ManagementUI", thumpable, ISManagementUIContextMenu.removeFromModData, player)
-        end
-        contextMenu:addOption("Open ManagementUI", player, ISManagementUIContextMenu.onShowTestUI, playerNum)
+
+
     end
 end
 Events.OnFillWorldObjectContextMenu.Add(ISManagementUIContextMenu.onCreateWorldContextMenu)
 
-function ISManagementUIContextMenu.onCreateInventoryContextMenu(playerNum, contextMenu, inventoryItems)
-    local player = getSpecificPlayer(playerNum)
-    local items = inventoryItems
-    if not instanceof(inventoryItems[1], "InventoryItem") then
-        items = inventoryItems[1].items
-    end
 
-    local itemsUI = ModData.getOrCreate("ManagementUI")
-
-    for i=1, #items do
-        local alreadyInData = false
-        for j=1, #itemsUI do
-            if type(itemsUI[j]) == "string" and items[i]:getFullType() == itemsUI[j] then
-                alreadyInData = true
-                break
-            end
-        end
-        if not alreadyInData then
-            contextMenu:addOption("Add to ManagementUI", items[i], ISManagementUIContextMenu.addToModData, nil, player)
-        else
-            contextMenu:addOption("Remove from ManagementUI", items[i], ISManagementUIContextMenu.removeFromModData, player)
-        end
-        contextMenu:addOption("Open ManagementUI", player, ISManagementUIContextMenu.onShowTestUI, playerNum)
-        break
-    end
-end
-Events.OnFillInventoryObjectContextMenu.Add(ISManagementUIContextMenu.onCreateInventoryContextMenu)
+Events.OnInitGlobalModData.Add(ISManagementUIContextMenu.getUIManagerFromModData)
+Events.OnPostSave.Add(ISManagementUIContextMenu.saveUIManagerToModData)
 
 
 ------------------ Returning file for 'require' ------------------

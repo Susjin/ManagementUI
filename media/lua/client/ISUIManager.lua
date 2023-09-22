@@ -6,8 +6,7 @@
 
 --- Main file with all functions related to creating the ManagementPanel
 --- @class ISUIManager
---- @field character IsoPlayer
---- @field playerNum number
+--- @field title string
 --- @field maxButtons number
 --- @field numPages number
 --- @field maxObjects number
@@ -52,21 +51,15 @@ local getCell = getCell
 
 ------------------ Functions related to creation of the UI ------------------
 
-function ISUIManager:setupDimensions()
-    self.x = getPlayerScreenLeft(self.playerNum) + 100
-    self.y = getPlayerScreenTop(self.playerNum) + 50
+function ISUIManager:setupDimensions(player)
+    local playerNum = player:getPlayerNum()
 
-    local playerWidth = getPlayerScreenWidth(self.playerNum)
-    local playerHeight = getPlayerScreenHeight(self.playerNum)
+    local playerWidth = getPlayerScreenWidth(playerNum)
+    local playerHeight = getPlayerScreenHeight(playerNum)
     local screenMaxButtons = 0
     local screenMaxObjects = 0
 
     --Width of the panel
-    if self.maxButtons < 2 then
-        self.maxButtons = 2
-    elseif self.maxButtons > 6 then
-        self.maxButtons = 6
-    end
     if not self.ignoreScreenWidth then
         if playerWidth > 960 then
             screenMaxButtons = 6
@@ -82,11 +75,6 @@ function ISUIManager:setupDimensions()
     self.width = maxButtonsSheet[self.maxButtons]
 
     --Height of the panel
-    if self.maxObjects < 4 then
-        self.maxObjects = 4
-    elseif self.maxObjects > 8 then
-        self.maxObjects = 8
-    end
     if playerHeight > 1200 then
         screenMaxObjects = 8
     elseif playerHeight > 1000 then
@@ -99,6 +87,8 @@ function ISUIManager:setupDimensions()
     end
     self.height = maxObjectsSheet[self.maxObjects]
 
+    self.x = getPlayerScreenLeft(playerNum) + 100
+    self.y = getPlayerScreenHeight(playerNum) - self.height - 100
 end
 
 function ISUIManager:validateObjects()
@@ -110,7 +100,7 @@ function ISUIManager:validateObjects()
         if objectSquare then
             local squareObjects = objectSquare:getObjects()
             for i=0, squareObjects:size()-1 do
-                if instanceof(squareObjects:get(i), obj.objectType) then
+                if instanceof(squareObjects:get(i), obj.objectType) and obj.numButtons <= self.maxButtons then
                     obj.isoObject = squareObjects:get(i)
                 end
             end
@@ -123,12 +113,43 @@ function ISUIManager:validateObjects()
     self.validatedObjects = newObjects
 end
 
+function ISUIManager:createManagementPanel(player)
+    self:setupDimensions(player)
+    self:validateObjects()
+
+    self.panel = ISManagementPanel:new(self.title, self.x, self.y, self.width, self.height, player, self)
+    self.panel:initialise()
+    self.panel:instantiate()
+    self.panel:addToUIManager()
+
+    --[[ Check if needed
+    if self.playerNum == 0 and self.character:getJoypadBind() == -1 then
+        ISLayoutManager.RegisterWindow('managementui', ISManagementPanel, self.panel)
+    end
+
+    if playerInventory.joyfocus then
+        playerInventory.drawJoypadFocus = false
+        setJoypadFocus(playerNum, ManagementUI)
+    end
+    --]]
+end
+
+function ISUIManager:nullifyEverythingForSaving()
+    for _, data in pairs(self.objects) do
+        data.isoObject = nil
+    end
+    for _, data in pairs(self.validatedObjects) do
+        data.isoObject = nil
+    end
+    self.panel = nil
+end
+
 --[[**********************************************************************************]]--
 
 ------------------ Functions related to managing objects ------------------
 
 function ISUIManager:calculatePages()
-    local pages = self.numObjects/self.maxObjects
+    local pages = #self.objects/self.maxObjects
     pages = pages > 0 and math.ceil(pages) or 0
     self.numPages = pages
 end
@@ -390,14 +411,34 @@ end
 
 --[[**********************************************************************************]]--
 
+function ISUIManager:correctMaximumValues()
+    --Set minimum and maximum buttons
+    if self.maxButtons < 2 then
+        self.maxButtons = 2
+    elseif self.maxButtons > 6 then
+        self.maxButtons = 6
+    end
+    --Set minimum and maximum objects
+    if self.maxObjects < 4 then
+        self.maxObjects = 4
+    elseif self.maxObjects > 8 then
+        self.maxObjects = 8
+    end
+end
+
 ---Initialize the ManagementUI Manager
----@param player IsoPlayer
----@param maxObjects number
----@param maxButtons number
----@param ignoreScreenWidth boolean
+---@param title string The title of the UI that this manager will handle
+---@param maxObjects number Maximum amount of objects per page (min 4, max 8)
+---@param maxButtons number Maximum amount of buttons per object (min 2, max 6)
+---@param ignoreScreenWidth boolean If true, width calculations will ignore the current resolution, if false, it may reduce the max amount of buttons if the screen is too small (only affects resolutions lower than 1024x768)
 ---@return PreUIObject
-function ISUIManager:initialiseUIManager(player, maxObjects, maxButtons, ignoreScreenWidth)
+function ISUIManager:initialiseUIManager(title, maxObjects, maxButtons, ignoreScreenWidth)
+    ---@type ISUIManager
     local o = {}
+    setmetatable(o, self)
+    self.__index = self
+
+    o.title = title
     o.x = 0
     o.y = 0
     o.width = 0
@@ -408,12 +449,11 @@ function ISUIManager:initialiseUIManager(player, maxObjects, maxButtons, ignoreS
     o.objects = {}
     o.validatedObjects = {}
     o.numObjects = 1
-    o.character = player
-    o.playerNum = player:getPlayerNum()
     o.ignoreScreenWidth = ignoreScreenWidth
 
-    o.panel = {}
+    o.panel = nil
 
+    o:correctMaximumValues()
     return o
 end
 
