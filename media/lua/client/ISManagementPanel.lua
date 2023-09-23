@@ -20,25 +20,6 @@ ISManagementPanel = ISCollapsableWindowJoypad:derive("ISManagementPanel")
 -- ------ Setting up Locals ------ --
 local ISManagementPage = require "ISManagementPage"
 
---[[
----addObjectToPage
----@param page ISManagementPage
----@param texture string
----@param name string
----@param description string
----@param buttonNames string[]
----@param buttonFunctions function[]
----@param buttonArgs any[]
-function ISManagementPanel:addObjectToPage(page, texture, name, description, buttonNames, buttonFunctions, buttonArgs)
-    local ID = #page.objects+1
-
-    page.objects[ID] = ISManagementObject:new(100*(ID-1), page:getWidth(), texture, name, description, buttonNames, buttonFunctions, buttonArgs)
-    page.objects[ID]:initialise()
-    page.objects[ID]:instantiate()
-
-    page:addChild(page.objects[ID])
-end
---]]
 
 --[[**********************************************************************************]]--
 
@@ -94,6 +75,7 @@ function ISManagementPanel:setVisibleFunction()
                 panel.pages[i]:clearAllObjects()
                 panel.tabs:removeView(panel.pages[i])
             end
+        else
             panel.manager:validateObjects()
             panel:createPages()
             panel:createObjects()
@@ -110,10 +92,9 @@ end
 function ISManagementPanel:createChildren()
     ISCollapsableWindowJoypad.createChildren(self)
     local th = self:titleBarHeight()
-    local rh = self:resizeWidgetHeight()
 
     --Create tab panel
-    self.tabs = ISTabPanel:new(0, th, self.width, self.height-th-rh)
+    self.tabs = ISTabPanel:new(0, th, self.width, self.height-th)
     self.tabs:setAnchorRight(true)
     self.tabs:setAnchorBottom(true)
     self.tabs:setEqualTabWidth(false)
@@ -212,6 +193,17 @@ function ISManagementPanel:onJoypadDirDown(button)
     --]]
 end
 
+---Sets if the window is resizable
+function ISManagementPanel:setResizable(resizable)
+    self.resizable = resizable
+    if self.resizeWidget then
+        self.resizeWidget:setVisible(resizable)
+    end
+    if self.resizeWidget2 then
+        self.resizeWidget2:setVisible(resizable)
+    end
+end
+
 ---Triggers when UI is closed
 function ISManagementPanel:close()
     self:setVisible(false)
@@ -237,8 +229,6 @@ function ISManagementPanel:new(title, x, y, width, height, character, manager)
     o.playerNum = character:getPlayerNum()
     o.numObjects = 0
     o.pages = {}
-    o:setResizeable(false)
-    o:setVisibleFunction()
     return o
 end
 

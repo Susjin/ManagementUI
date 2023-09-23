@@ -42,10 +42,33 @@ local ISUIManager = {}
 local ISManagementPanel = require "ISManagementPanel"
 
 local maxButtonsSheet = {320, 320, 400, 400, 480, 480}
-local maxObjectsSheet = { 444, 444, 444, 444, 544, 644, 744, 844}
+local maxObjectsSheet = { 436, 436, 436, 436, 536, 636, 736, 836}
 
 local pairs = pairs
 local getCell = getCell
+
+--[[**********************************************************************************]]--
+
+------------------ Functions related to saving/loading the manager ------------------
+
+---Reloads all information of the ISUIManager from another manager table (ModData)
+---@param managerTable ISUIManager
+---@return ISUIManager
+function ISUIManager:reloadFromModData(managerTable)
+    local o = self:initialiseUIManager(managerTable.title, managerTable.maxObjects, managerTable.maxButtons, managerTable.ignoreScreenWidth)
+    o.numPages = managerTable.numPages
+    o.objects = managerTable.objects
+    o.validatedObjects = managerTable.validatedObjects
+    o.numObjects = managerTable.numObjects
+    o.x = managerTable.x
+    o.y = managerTable.y
+    o.width = managerTable.width
+    o.height = managerTable.height
+
+    return o
+end
+
+
 
 --[[**********************************************************************************]]--
 
@@ -124,10 +147,12 @@ function ISUIManager:createManagementPanel(player)
     self:validateObjects()
 
     self.panel = ISManagementPanel:new(self.title, self.x, self.y, self.width, self.height, player, self)
+    self.panel:setVisibleFunction()
     self.panel:initialise()
     self.panel:instantiate()
+    self.panel:setResizable(false)
     self.panel:addToUIManager()
-    self.panel:setVisible(true)
+    --self.panel:setVisible(true)
 
     --[[ Check if needed
     if self.playerNum == 0 and self.character:getJoypadBind() == -1 then
@@ -438,7 +463,7 @@ end
 ---@param maxObjects number Maximum amount of objects per page (min 4, max 8)
 ---@param maxButtons number Maximum amount of buttons per object (min 2, max 6)
 ---@param ignoreScreenWidth boolean If true, width calculations will ignore the current resolution, if false, it may reduce the max amount of buttons if the screen is too small (only affects resolutions lower than 1024x768)
----@return PreUIObject
+---@return ISUIManager
 function ISUIManager:initialiseUIManager(title, maxObjects, maxButtons, ignoreScreenWidth)
     ---@type ISUIManager
     local o = {}

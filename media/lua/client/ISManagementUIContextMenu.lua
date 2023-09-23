@@ -12,9 +12,13 @@ local ISManagementUIContextMenu = {}
 -- ------ Setting up locals ------ --
 local ISUIManager = require "ISUIManager"
 ---@type ISUIManager
-local UIManager = {}
+local UIManager
 
 local pairs = pairs
+
+
+--TODO:Check consistency between reloads, check buttons not working, check textures
+
 
 
 function ISManagementUIContextMenu.getUIManagerFromModData()
@@ -23,7 +27,8 @@ function ISManagementUIContextMenu.getUIManagerFromModData()
         local found = false
         for _, manager in pairs(managers) do
             if manager.title == "TestManagementUI" then
-                UIManager = manager
+                UIManager = ISUIManager:reloadFromModData(manager)
+                manager = UIManager
                 found = true
                 break
             end
@@ -39,14 +44,18 @@ function ISManagementUIContextMenu.getUIManagerFromModData()
 end
 
 function ISManagementUIContextMenu.saveUIManagerToModData()
-    UIManager:nullifyEverythingForSaving()
-    local managers = ModData.getOrCreate("ManagementUIManagers")
-    for _, manager in pairs(managers) do
-        if manager.title == "TestManagementUI" then
-            manager = UIManager
+    if UIManager ~= nil then
+        UIManager.panel:removeFromUIManager()
+        UIManager:nullifyEverythingForSaving()
+        local managers = ModData.getOrCreate("ManagementUIManagers")
+        for _, manager in pairs(managers) do
+            if manager.title == "TestManagementUI" then
+                manager = UIManager
+                return
+            end
         end
+        managers[#managers+1] = UIManager
     end
-    managers[#managers+1] = UIManager
 end
 
 
@@ -123,7 +132,8 @@ function ISManagementUIContextMenu.onCreateWorldContextMenu(playerNum, contextMe
             objects.lightSwitch = worldObjects[i]
         end
     end
-
+    local CUIManager = UIManager
+    print(CUIManager)
     for i, object in pairs(objects) do
        contextMenu:addOption(string.format("Add '%s' to the UI", objSheet[i]), {object = object, type = objSheet[i]}, ISManagementUIContextMenu.textBoxAddObject, player)
     end
@@ -139,4 +149,4 @@ Events.OnPostSave.Add(ISManagementUIContextMenu.saveUIManagerToModData)
 
 
 ------------------ Returning file for 'require' ------------------
-return ISManagementUIContextMenu
+--return ISManagementUIContextMenu
