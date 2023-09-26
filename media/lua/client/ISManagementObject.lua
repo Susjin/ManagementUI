@@ -26,11 +26,11 @@ local ISManagementObject = {}
 ISManagementObject = ISPanelJoypad:derive("ISManagementObject")
 
 -- ------ Fixing the vanilla 'setOnClick' ISButton function -- ------
-local _ = ISButton.setOnClick
+--[[local _ = ISButton.setOnClick
 function ISButton:setOnClick(func, arg1, arg2, arg3, arg4)
     self.onclick = func
     self.onClickArgs = { arg1, arg2, arg3, arg4 }
-end
+end ]]
 
 -- ------ Setting up locals -- ------
 local function checkButtonPosByID(id)
@@ -60,19 +60,16 @@ end
 ------------------ Functions related to buttons ------------------
 
 function ISManagementObject:createButton(id)
-    if self.buttons[id] ~= nil then return false end
+    if self.buttons[id] ~= nil then return end
     local posX = checkButtonPosByID(id)
-    local posY = id%2 == 0 and 15 or 55
+    local posY = id%2 == 1 and 15 or 55
 
-    local button = ISButton:new(self.width - posX, posY, 70, 30, self.buttonNames[id], self.isoObject)
-    button:initialise()
-    button:instantiate()
-    button.borderColor = {r=1, g=1, b=1, a=0.1}
-    button.internal = self.buttonNames[id]
-    self.buttons[id] = button
-    self:addChild(self.buttons[id])
-    self:updateButtonOnClick(id, self.param1, self.param2, self.param3, self.param4)
-    return true
+    self.buttons[id] = ISButton:new(self.width - posX, posY, 70, 30, self.buttonNames[id], self.isoObject, function(target, but) print(target:getTextureName());print(but.internal); end)
+    self.buttons[id]:initialise()
+    self.buttons[id]:instantiate()
+    self.buttons[id].borderColor = {r=1, g=1, b=1, a=0.1}
+    self.buttons[id].internal = self.buttonNames[id]
+    --self:updateButtonOnClick(id, self.param1, self.param2, self.param3, self.param4)
 end
 
 function ISManagementObject:setButtonNameByID(name, id)
@@ -120,18 +117,27 @@ function ISManagementObject:updateObjectTexture()
 end
 
 function ISManagementObject:createChildren()
+    --Buttons creation
+    for i=1, self.numButtons do
+        self:createButton(i)
+        self:addChild(self.buttons[i])
+    end
+    self:insertNewLineOfButtons(self.buttons[5], self.buttons[3], self.buttons[1])
+    self:insertNewLineOfButtons(self.buttons[6], self.buttons[4], self.buttons[2])
+
     --Adding TextPanel as a child
     self:addChild(self.descriptionPanel)
     self.descriptionPanel.text = " <H2> " .. self.name .. " <LINE><TEXT><RGB:1,1,1> "
     self.descriptionPanel.text = self.descriptionPanel.text .. self.description
     self.descriptionPanel:paginate()
 
-    --Buttons creation
-    for i=1, self.numButtons+1 do
-        self:createButton(i)
-    end
-    self:insertNewLineOfButtons(self.buttons[5], self.buttons[3], self.buttons[1])
-    self:insertNewLineOfButtons(self.buttons[6], self.buttons[4], self.buttons[2])
+    self.buttons1 = ISButton:new(self.width - 325, 15, 70, 30, self.buttonNames[1], self, function(target, but) print(target.name);print(but.internal); end)
+    self.buttons1:initialise()
+    self.buttons1:instantiate()
+    self.buttons1.borderColor = {r=1, g=1, b=1, a=0.1}
+    self.buttons1.internal = self.buttonNames[1]
+    self:addChild(self.buttons1)
+
 end
 
 function ISManagementObject:prerender()
@@ -181,9 +187,11 @@ function ISManagementObject:new(y, width, isoObject, name, description, numButto
     o.param4 = param4
 
     o.buttons = {}
-    o.descriptionPanel = ISRichTextPanel:new(56, 0, (width) - (50 - 4) + (10) - (checkDescPanelWidth(numButtons)), 100)
+
+    o.descriptionPanel = ISRichTextPanel:new(56, 0, (width) - (50 - 4) - (checkDescPanelWidth(numButtons)), 100)
     o.descriptionPanel:initialise();
     o.descriptionPanel:noBackground()
+    o.descriptionPanel.backgroundColor = {r=1,g=0,b=0,a=0.5}
     o.descriptionPanel.autosetheight = false
     o.descriptionPanel:setMargins(0,12,0,0)
 

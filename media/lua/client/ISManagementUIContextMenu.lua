@@ -28,33 +28,51 @@ function ISManagementUIContextMenu.getUIManagerFromModData()
         for _, manager in pairs(managers) do
             if manager.title == "TestManagementUI" then
                 UIManager = ISUIManager:reloadFromModData(manager)
-                manager = UIManager
                 found = true
                 break
             end
         end
         if not found then
             UIManager = ISUIManager:initialiseUIManager("TestManagementUI", 8, 6, false)
-            managers[#managers+1] = UIManager
         end
     else
         UIManager = ISUIManager:initialiseUIManager("TestManagementUI", 8, 6, false)
-        managers[#managers+1] = UIManager
     end
 end
 
 function ISManagementUIContextMenu.saveUIManagerToModData()
     if UIManager ~= nil then
-        UIManager.panel:removeFromUIManager()
         UIManager:nullifyEverythingForSaving()
+        ---@type ISUIManager[]
         local managers = ModData.getOrCreate("ManagementUIManagers")
         for _, manager in pairs(managers) do
             if manager.title == "TestManagementUI" then
-                manager = UIManager
+                manager.title = UIManager.title
+                manager.maxObjects = UIManager.maxObjects
+                manager.maxButtons = UIManager.maxButtons
+                manager.ignoreScreenWidth = UIManager.ignoreScreenWidth
+                manager.numPages = UIManager.numPages
+                manager.objects = UIManager.objects
+                manager.numObjects = UIManager.numObjects
+                manager.x = UIManager.x
+                manager.y = UIManager.y
+                manager.width = UIManager.width
+                manager.height = UIManager.height
                 return
             end
         end
-        managers[#managers+1] = UIManager
+        managers[#managers+1] = {}
+        managers[#managers].title = UIManager.title
+        managers[#managers].maxObjects = UIManager.maxObjects
+        managers[#managers].maxButtons = UIManager.maxButtons
+        managers[#managers].ignoreScreenWidth = UIManager.ignoreScreenWidth
+        managers[#managers].numPages = UIManager.numPages
+        managers[#managers].objects = UIManager.objects
+        managers[#managers].numObjects = UIManager.numObjects
+        managers[#managers].x = UIManager.x
+        managers[#managers].y = UIManager.y
+        managers[#managers].width = UIManager.width
+        managers[#managers].height = UIManager.height
     end
 end
 
@@ -74,7 +92,7 @@ function ISManagementUIContextMenu.addObject(object, button, player)
         local square = object.object:getSquare()
         local objectSquare = {x = square:getX(), y = square:getY(), z = square:getZ()}
 
-        UIManager:addObject(button.parent.entry:getText(), "", objectSquare, object.type, 2, {"Test1", "Test2"})
+        UIManager:addObject(button.parent.entry:getText(), "", objectSquare, object.type, 6, {"Test1", "Test2", "Test3", "Test4", "Test5", "Test6"}, function(target, but) print(but.internal) end)
 
         player:Say("Saved")
     end
@@ -132,8 +150,7 @@ function ISManagementUIContextMenu.onCreateWorldContextMenu(playerNum, contextMe
             objects.lightSwitch = worldObjects[i]
         end
     end
-    local CUIManager = UIManager
-    print(CUIManager)
+
     for i, object in pairs(objects) do
        contextMenu:addOption(string.format("Add '%s' to the UI", objSheet[i]), {object = object, type = objSheet[i]}, ISManagementUIContextMenu.textBoxAddObject, player)
     end
@@ -145,7 +162,7 @@ Events.OnFillWorldObjectContextMenu.Add(ISManagementUIContextMenu.onCreateWorldC
 
 
 Events.OnInitGlobalModData.Add(ISManagementUIContextMenu.getUIManagerFromModData)
-Events.OnPostSave.Add(ISManagementUIContextMenu.saveUIManagerToModData)
+Events.OnSave.Add(ISManagementUIContextMenu.saveUIManagerToModData)
 
 
 ------------------ Returning file for 'require' ------------------

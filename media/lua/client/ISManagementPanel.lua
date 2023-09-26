@@ -31,6 +31,9 @@ function ISManagementPanel:createPages()
             for i = #self.pages + 1, self.manager.numPages do
                 self.pages[i] = ISManagementPage:new(0, 0, self.tabs.width, self.tabs.height)
                 self.tabs:addView(string.format("Page %d", i), self.pages[i])
+                self.pages[i]:setAnchorRight(true)
+                self.pages[i]:setAnchorBottom(true)
+                self.pages[i]:noBackground()
             end
         else
             for i = #self.pages, self.manager.numPages + 1, -1 do

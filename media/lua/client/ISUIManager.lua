@@ -42,7 +42,7 @@ local ISUIManager = {}
 local ISManagementPanel = require "ISManagementPanel"
 
 local maxButtonsSheet = {320, 320, 400, 400, 480, 480}
-local maxObjectsSheet = { 436, 436, 436, 436, 536, 636, 736, 836}
+local maxObjectsSheet = {436, 436, 436, 436, 536, 636, 736, 836}
 
 local pairs = pairs
 local getCell = getCell
@@ -58,7 +58,6 @@ function ISUIManager:reloadFromModData(managerTable)
     local o = self:initialiseUIManager(managerTable.title, managerTable.maxObjects, managerTable.maxButtons, managerTable.ignoreScreenWidth)
     o.numPages = managerTable.numPages
     o.objects = managerTable.objects
-    o.validatedObjects = managerTable.validatedObjects
     o.numObjects = managerTable.numObjects
     o.x = managerTable.x
     o.y = managerTable.y
@@ -147,7 +146,7 @@ function ISUIManager:createManagementPanel(player)
     self:validateObjects()
 
     self.panel = ISManagementPanel:new(self.title, self.x, self.y, self.width, self.height, player, self)
-    self.panel:setVisibleFunction()
+    --self.panel:setVisibleFunction()
     self.panel:initialise()
     self.panel:instantiate()
     self.panel:setResizable(false)

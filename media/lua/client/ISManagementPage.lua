@@ -45,9 +45,6 @@ function ISManagementPage:new(y, width, height)
     self.__index = self
     o.objects = {}
 
-    o:setAnchorRight(true)
-    o:setAnchorBottom(true)
-    o:noBackground()
     return o
 end
 
