@@ -131,13 +131,6 @@ function ISManagementObject:createChildren()
     self.descriptionPanel.text = self.descriptionPanel.text .. self.description
     self.descriptionPanel:paginate()
 
-    self.buttons1 = ISButton:new(self.width - 325, 15, 70, 30, self.buttonNames[1], self, function(target, but) print(target.name);print(but.internal); end)
-    self.buttons1:initialise()
-    self.buttons1:instantiate()
-    self.buttons1.borderColor = {r=1, g=1, b=1, a=0.1}
-    self.buttons1.internal = self.buttonNames[1]
-    self:addChild(self.buttons1)
-
 end
 
 function ISManagementObject:prerender()

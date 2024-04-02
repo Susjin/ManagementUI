@@ -29,7 +29,7 @@ function ISManagementPanel:createPages()
     if #self.pages ~= self.manager.numPages then
         if #self.pages < self.manager.numPages then
             for i = #self.pages + 1, self.manager.numPages do
-                self.pages[i] = ISManagementPage:new(0, 0, self.tabs.width, self.tabs.height)
+                self.pages[i] = ISManagementPage:new(0, self.tabs.width, self.tabs.height)
                 self.tabs:addView(string.format("Page %d", i), self.pages[i])
                 self.pages[i]:setAnchorRight(true)
                 self.pages[i]:setAnchorBottom(true)
@@ -57,8 +57,7 @@ function ISManagementPanel:createObjects()
             self.numObjects = self.numObjects + 1
             pos = pos + 1
         end
-    end
-    ]]--
+    end]]
     for i = 1, self.manager.numPages do
         for j = 1, self.manager.maxObjects do
             if self.numObjects >= #self.manager.validatedObjects then
@@ -103,7 +102,6 @@ function ISManagementPanel:createChildren()
     self.tabs:setEqualTabWidth(false)
     self:addChild(self.tabs)
 
-
     self:createPages()
     self:createObjects()
 
@@ -118,14 +116,6 @@ function ISManagementPanel:createChildren()
     --]]
 
 end
-
---[[ Temporary
----Triggers once when UI is created
-function ISManagementPanel:prerender()
-    ISCollapsableWindowJoypad.prerender(self)
-
-end]]
-
 
 ---Triggers when UI gains the Joypad Focus
 ---@param joypadData table
