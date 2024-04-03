@@ -45,19 +45,6 @@ function ISManagementPanel:createPages()
 end
 
 function ISManagementPanel:createObjects()
-    --[[
-    for i = 1, self.manager.numPages do
-        local pos = 1
-        local actualObjectPos = (self.manager.maxObjects*(i-1))
-        for j = 1 + actualObjectPos, self.manager.maxObjects + actualObjectPos do
-            if j > #self.manager.validatedObjects then
-                break
-            end
-            self.pages[i]:addObjectToPage(self.manager.validatedObjects[j], pos, self.width)
-            self.numObjects = self.numObjects + 1
-            pos = pos + 1
-        end
-    end]]
     for i = 1, self.manager.numPages do
         for j = 1, self.manager.maxObjects do
             if self.numObjects >= #self.manager.validatedObjects then
@@ -69,15 +56,26 @@ function ISManagementPanel:createObjects()
     end
 end
 
+function ISManagementPanel:clearAllPages()
+    for i = 1, #self.pages do
+        self.pages[i]:clearAllObjects()
+        self.tabs:removeView(self.pages[i])
+        self.pages[i] = nil
+    end
+    self.numObjects = 0
+end
+
+--[[
 function ISManagementPanel:setVisibleFunction()
     self.visibleTarget = self.manager
+    ---triggerSetVisible
+    ---@param panel ISManagementPanel
     local function triggerSetVisible(_, panel)
         if not panel:isVisible() then
-            for i = 1, #panel.pages do
-                panel.pages[i]:clearAllObjects()
-                panel.tabs:removeView(panel.pages[i])
-            end
+            print("nao visivel")
+            panel:clearAllPages()
         else
+            print("visivel")
             panel.manager:validateObjects()
             panel:createPages()
             panel:createObjects()
@@ -85,7 +83,7 @@ function ISManagementPanel:setVisibleFunction()
     end
     self.visibleFunction = triggerSetVisible
 end
-
+--]]
 --[[**********************************************************************************]]--
 
 ------------------ Functions related to the Panel UIElement ------------------
@@ -106,10 +104,6 @@ function ISManagementPanel:createChildren()
     self:createObjects()
 
     --[[
-    --Creating pages
-    self.pages[1] = ISManagementPage:new(0, 0, self.tabs.width, self.tabs.height)
-    self.tabs:addView("1", self.pages[1])
-
     self:addObjectToPage(self.pages[1], "gate_yay_01_8", "Portail Automatiss", " <INDENT:8><RGB:0,1,0> Battery charge: 25/100 <LINE><RGB:1,1,1><INDENT:0>States: <LINE><INDENT:8><RGB:1,0,0> Closed <RGB:1,1,1> | <RGB:0,1,0> Unlocked", {"Use", "Lock", "Copy", "Disconnect"})
     self:addObjectToPage(self.pages[1], "appliances_cooking_01_4", "Base Oven", " <INDENT:8><RGB:0,1,0> Temperature: 300K <LINE><RGB:1,1,1>States: <LINE><INDENT:8><RGB:1,0,0> Off <RGB:1,1,1> | <RGB:0,1,0> Timer", {"Turn On", "Timer", "PlaceHolde", "PlaceHolde"})
     self:addObjectToPage(self.pages[1], getTexture("appliances_misc_01_0"), "Generator - ID 1457", " <INDENT:8> Branch Setting: <RGB:1,1,0> Split Power <LINE><RGB:1,1,1><INDENT:0>States: <LINE><INDENT:8><RGB:1,0,0> Off <RGB:1,1,1> | <RGB:0,1,0> Fuel: 65% <RGB:1,1,1> | <RGB:1,1,0> Condition: 96%", {"Turn On", "Split", "Focus", "Disable"})
@@ -199,7 +193,12 @@ end
 
 ---Triggers when UI is closed
 function ISManagementPanel:close()
+    self.manager.x = self.x
+    self.manager.y = self.y
     self:setVisible(false)
+    self:removeFromUIManager()
+
+    self.manager.panel = nil
 end
 
 ---Creates a ManagementUI object
@@ -209,8 +208,9 @@ end
 ---@param height number Height of the panel
 ---@param character IsoPlayer Player that's rendering the interface
 ---@param manager ISUIManager Manager of all the ManagementUI elements
+---@param showAllObjects boolean If true, show all objects, even not validated ones
 ---@return ISManagementPanel
-function ISManagementPanel:new(title, x, y, width, height, character, manager)
+function ISManagementPanel:new(title, x, y, width, height, character, manager, showAllObjects)
     ---@type ISManagementPanel
     local o = ISCollapsableWindowJoypad.new(self, x, y, width, height)
     setmetatable(o, self)

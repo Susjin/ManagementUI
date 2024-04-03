@@ -13,11 +13,10 @@ local ISManagementUIContextMenu = {}
 local ISUIManager = require "ISUIManager"
 ---@type ISUIManager
 local UIManager
-
 local pairs = pairs
 
 
---TODO:Check consistency between reloads, check buttons not working, check textures
+--TODO: Check textures
 
 
 
@@ -79,11 +78,7 @@ end
 
 -- ------ ContextMenu functions ------ --
 function ISManagementUIContextMenu.openUI(player)
-    if UIManager.panel == nil then
-        UIManager:createManagementPanel(player)
-    else
-        UIManager.panel:setVisible(true)
-    end
+    UIManager:createManagementPanel(player)
 end
 
 function ISManagementUIContextMenu.addObject(object, button, player)

@@ -26,20 +26,28 @@ local ISManagementObject = {}
 ISManagementObject = ISPanelJoypad:derive("ISManagementObject")
 
 -- ------ Fixing the vanilla 'setOnClick' ISButton function -- ------
---[[local _ = ISButton.setOnClick
+local _ = ISButton.setOnClick
 function ISButton:setOnClick(func, arg1, arg2, arg3, arg4)
     self.onclick = func
     self.onClickArgs = { arg1, arg2, arg3, arg4 }
-end ]]
+end
 
 -- ------ Setting up locals -- ------
-local function checkButtonPosByID(id)
+local function checkButtonPosXByID(id)
     if id >= 5 then
         return 245
     elseif id >= 3 then
         return 165
     else
         return 85
+    end
+end
+
+local function checkButtonPosYByID(id)
+    if id%2 == 1 then
+        return 15
+    else
+        return 55
     end
 end
 
@@ -61,15 +69,15 @@ end
 
 function ISManagementObject:createButton(id)
     if self.buttons[id] ~= nil then return end
-    local posX = checkButtonPosByID(id)
-    local posY = id%2 == 1 and 15 or 55
+    local posX = checkButtonPosXByID(id)
+    local posY = checkButtonPosYByID(id)
 
     self.buttons[id] = ISButton:new(self.width - posX, posY, 70, 30, self.buttonNames[id], self.isoObject, function(target, but) print(target:getTextureName());print(but.internal); end)
     self.buttons[id]:initialise()
     self.buttons[id]:instantiate()
     self.buttons[id].borderColor = {r=1, g=1, b=1, a=0.1}
     self.buttons[id].internal = self.buttonNames[id]
-    --self:updateButtonOnClick(id, self.param1, self.param2, self.param3, self.param4)
+    self:updateButtonOnClick(id, self.param1, self.param2, self.param3, self.param4)
 end
 
 function ISManagementObject:setButtonNameByID(name, id)

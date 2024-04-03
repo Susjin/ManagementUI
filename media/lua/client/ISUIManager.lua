@@ -38,6 +38,12 @@ local ISUIManager = {}
 --- @field param3 any Can be any extra parameters used with the 'onClickButton' function
 --- @field param4 any Can be any extra parameters used with the 'onClickButton' function
 
+-- Testing ms lag:
+--[[
+During tests, using 60 objects at the same time, totalling 10 pages worth of objects,
+including all 6 buttons each, totalling 360 buttons, 60 description boxes and 60 textures renderers.
+The game needed 34ms to create everything said on my computer, the results may vary from each machine.
+--]]
 -- ------ Setting up Locals ------ --
 local ISManagementPanel = require "ISManagementPanel"
 
@@ -113,6 +119,39 @@ function ISUIManager:setupDimensions(player)
     self.y = getPlayerScreenHeight(playerNum) - self.height - 100
 end
 
+function ISUIManager:createManagementPanel(player, showAllObjects)
+    self:setupDimensions(player)
+    self:validateObjects()
+
+    self.panel = ISManagementPanel:new(self.title, self.x, self.y, self.width, self.height, player, self, showAllObjects)
+    self.panel:initialise()
+    self.panel:instantiate()
+    self.panel:setResizable(false)
+    self.panel:addToUIManager()
+
+end
+
+function ISUIManager:nullifyEverythingForSaving()
+    for _, data in pairs(self.objects) do
+        data.isoObject = nil
+    end
+    for _, data in pairs(self.validatedObjects) do
+        data.isoObject = nil
+    end
+    self.panel = nil
+end
+
+--[[**********************************************************************************]]--
+
+------------------ Functions related to managing objects ------------------
+
+---Calculates all necessary pages to fit all objects
+function ISUIManager:calculatePages()
+    local pages = #self.objects/self.maxObjects
+    self.numPages = pages > 0 and math.ceil(pages) or 0
+end
+
+---Checks if all objects to be added to the UI are correctly loaded in the world, allowing them to show on the interface
 function ISUIManager:validateObjects()
     local newObjects = {}
     ---@param obj PreUIObject
@@ -135,54 +174,10 @@ function ISUIManager:validateObjects()
     self:calculateValidatedPages()
 end
 
+---Calculates all necessary pages to fit all validated objects
 function ISUIManager:calculateValidatedPages()
     local pages = #self.validatedObjects/self.maxObjects
-    pages = pages > 0 and math.ceil(pages) or 0
-    self.numPages = pages
-end
-
-function ISUIManager:createManagementPanel(player)
-    self:setupDimensions(player)
-    self:validateObjects()
-
-    self.panel = ISManagementPanel:new(self.title, self.x, self.y, self.width, self.height, player, self)
-    --self.panel:setVisibleFunction()
-    self.panel:initialise()
-    self.panel:instantiate()
-    self.panel:setResizable(false)
-    self.panel:addToUIManager()
-    --self.panel:setVisible(true)
-
-    --[[ Check if needed
-    if self.playerNum == 0 and self.character:getJoypadBind() == -1 then
-        ISLayoutManager.RegisterWindow('managementui', ISManagementPanel, self.panel)
-    end
-
-    if playerInventory.joyfocus then
-        playerInventory.drawJoypadFocus = false
-        setJoypadFocus(playerNum, ManagementUI)
-    end
-    --]]
-end
-
-function ISUIManager:nullifyEverythingForSaving()
-    for _, data in pairs(self.objects) do
-        data.isoObject = nil
-    end
-    for _, data in pairs(self.validatedObjects) do
-        data.isoObject = nil
-    end
-    self.panel = nil
-end
-
---[[**********************************************************************************]]--
-
------------------- Functions related to managing objects ------------------
-
-function ISUIManager:calculatePages()
-    local pages = #self.objects/self.maxObjects
-    pages = pages > 0 and math.ceil(pages) or 0
-    self.numPages = pages
+    self.numPages = pages > 0 and math.ceil(pages) or 0
 end
 
 ---Allocates a object before being added to the UI
@@ -315,7 +310,6 @@ function ISUIManager:addObjectAfter(previousName, name, description, squarePos, 
         return self:addObject(name, description, squarePos, objectType, numButtons, buttonNames, onClickButton, param1, param2, param3, param4)
     end
 
-
     local index = previousObject.id
     for i = #self.objects, index+1, -1 do
         self.objects[i+1] = self.objects[i]
@@ -377,7 +371,20 @@ function ISUIManager:addObjectBefore(nextName, name, description, squarePos, obj
     self:calculatePages()
     return object
 end
-
+---Adds a object at a specified index position related to all other objects
+---@param index number Index that this object will be added to (can use RichText tags)
+---@param name string Name of this object (can use RichText tags)
+---@param description string Description of this object (can use RichText tags)
+---@param squarePos table<string,number> Square XYZ of the object (table must have x, y and z indexes)
+---@param objectType string Instance of the object being used. e.g. IsoThumpable
+---@param numButtons number Number of buttons this object has. (min 2, max 6)
+---@param buttonNames string[] Ordered table with each position being a button's name respectively
+---@param onClickButton function Function that will trigger on every clicked button (Use 'if' and 'elseif' with the button names)
+---@param param1 any Can be any extra parameters used with the 'onClickButton' function
+---@param param2 any Can be any extra parameters used with the 'onClickButton' function
+---@param param3 any Can be any extra parameters used with the 'onClickButton' function
+---@param param4 any Can be any extra parameters used with the 'onClickButton' function
+---@return PreUIObject
 function ISUIManager:addObjectAtIndex(index, name, description, squarePos, objectType, numButtons, buttonNames, onClickButton, param1, param2, param3, param4)
     if #self.objects < index then
         print("ManagementUI: Number of objects is smaller than: " .. index)
@@ -432,6 +439,7 @@ function ISUIManager:removeLastObject()
     self:calculatePages()
 end
 
+---Gets a table containing all objects names
 function ISUIManager:getAllObjectsNames()
     local names = {}
     for i, obj in pairs(self.objects) do
@@ -442,6 +450,7 @@ end
 
 --[[**********************************************************************************]]--
 
+---Sets all values from max buttons and objects, so that it's always: (6 >= n >= 2)
 function ISUIManager:correctMaximumValues()
     --Set minimum and maximum buttons
     if self.maxButtons < 2 then

@@ -21,6 +21,7 @@ function ISManagementPage:clearAllObjects()
     for _, obj in pairs(self.objects) do
         obj:clearChildren()
         self:removeChild(obj)
+        obj = nil
     end
 end
 
