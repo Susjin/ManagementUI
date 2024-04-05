@@ -7,6 +7,7 @@
 --- Main file with all functions related to PLACEHOLDER
 --- @class ISManagementPage : ISPanelJoypad
 --- @field objects ISManagementObject[]
+--- @field manager ISUIManager
 local ISManagementPage = {}
 ----------------------------------------------------------------------------------------------
 -- ------ Inherent from ISPanelJoypad -- ------
@@ -17,6 +18,7 @@ local ISManagementObject = require "ISManagementObject"
 
 local pairs = pairs
 
+---Clear all the objects from this page
 function ISManagementPage:clearAllObjects()
     for _, obj in pairs(self.objects) do
         obj:clearChildren()
@@ -25,10 +27,13 @@ function ISManagementPage:clearAllObjects()
     end
 end
 
----addObjectToPage
----@param preUIObject PreUIObject
-function ISManagementPage:addObjectToPage(preUIObject, pos, width)
-    local object = ISManagementObject:new(100*(pos-1), width, preUIObject.isoObject, preUIObject.name, preUIObject.description, preUIObject.numButtons, preUIObject.buttonNames, preUIObject.onClickButton, preUIObject.param1, preUIObject.param2, preUIObject.param3, preUIObject.param4)
+---Adds a object to the current page
+---@param preUIObject PreUIObject Object created by the manager
+---@param pos number Object position related to other objects on this page (starts with 1)
+---@param width number Width of the object (same as the panel/page)
+---@param id number ID of this object on the manager
+function ISManagementPage:addObjectToPage(preUIObject, pos, width, id)
+    local object = ISManagementObject:new(100*(pos-1), width, id, preUIObject.isoObject, preUIObject.name, preUIObject.description, preUIObject.numButtons, preUIObject.buttonNames, preUIObject.onClickButton, preUIObject.param1, preUIObject.param2, preUIObject.param3, preUIObject.param4, self.manager)
     object:initialise()
     object:instantiate()
     self.objects[pos] = object
@@ -37,14 +42,15 @@ end
 
 
 ---Creates a new page for the ManagementPanel
----@param y number
----@param width number
----@param height number
-function ISManagementPage:new(y, width, height)
+---@param y number Starting y position (title bar + tabs bar)
+---@param width number Width of the object (same as tabs)
+---@param height number Height of the object (same as tabs)
+function ISManagementPage:new(y, width, height, manager)
     local o = ISPanelJoypad:new(0, y, width, height)
     setmetatable(o, self)
     self.__index = self
     o.objects = {}
+    o.manager = manager
 
     return o
 end

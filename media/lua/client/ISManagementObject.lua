@@ -7,6 +7,7 @@
 
 --- Main file with all functions related to a object on the ManagementUI
 --- @class ISManagementObject : ISPanelJoypad
+--- @field id number ID of this object on the manager
 --- @field isoObject IsoObject The IsoObject that is being targeted by this object
 --- @field texture Texture The Texture of the IsoObject to be rendered
 --- @field name string Name of this object (can use RichText tags)
@@ -20,6 +21,7 @@
 --- @field param3 any Can be any extra parameters used with the 'onClickButton' function
 --- @field param4 any Can be any extra parameters used with the 'onClickButton' function
 --- @field descriptionPanel ISRichTextPanel The RichText panel that is placed after the texture
+--- @field manager ISUIManager
 local ISManagementObject = {}
 ----------------------------------------------------------------------------------------------
 -- ------ Inherent from ISPanelJoypad -- ------
@@ -119,8 +121,11 @@ end
 ------------------ Functions related to the Object UIElement ------------------
 
 function ISManagementObject:updateObjectTexture()
+    print("Ttetetetetetetetete")
     if self.isoObject and self.isoObject:getSquare() then
-        self.texture = getTexture(self.isoObject:getTextureName())
+        local textureName = self.isoObject:getTextureName()
+        self.texture = getTexture(textureName)
+        self.manager.objects[self.id].textureName = textureName
     end
 end
 
@@ -158,6 +163,7 @@ end
 ---Creates a new ManagementObject to be added to a page
 ---@param y number the Y of this object (is always (index-1)*100)
 ---@param width number Width of the object (must be the same of the window)
+---@param id number ID of this object on the manager
 ---@param isoObject IsoObject The IsoObject that is being targeted by this object
 ---@param name string Name of this object (can use RichText tags)
 ---@param description string Description of this object (can use RichText tags)
@@ -168,15 +174,17 @@ end
 ---@param param2 any Can be any extra parameters used with the 'onClickButton' function
 ---@param param3 any Can be any extra parameters used with the 'onClickButton' function
 ---@param param4 any Can be any extra parameters used with the 'onClickButton' function
-function ISManagementObject:new(y, width, isoObject, name, description, numButtons, buttonNames, onClickButton, param1, param2, param3, param4)
+---@param manager ISUIManager
+function ISManagementObject:new(y, width, id, isoObject, name, description, numButtons, buttonNames, onClickButton, param1, param2, param3, param4, manager)
     ---@type ISManagementObject
     local o = ISPanelJoypad:new(0, y, width, 100)
     setmetatable(o, self)
     self.__index = self
     o.borderColor = {r=1, g=1, b=1, a=0.1}
 
+    o.id = id
     o.isoObject = isoObject
-    o.texture = isoObject and getTexture(isoObject:getTextureName()) or nil
+    o.texture = isoObject and getTexture(isoObject:getTextureName()) or getTexture(manager.objects[id].textureName)
     o.name = name or ""
     o.description = description or ""
     o.numButtons = numButtons or 0
@@ -186,6 +194,7 @@ function ISManagementObject:new(y, width, isoObject, name, description, numButto
     o.param2 = param2
     o.param3 = param3
     o.param4 = param4
+    o.manager = manager
 
     o.buttons = {}
 
