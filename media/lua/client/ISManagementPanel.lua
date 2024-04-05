@@ -12,7 +12,6 @@
 --- @field numObjects number
 --- @field pages ISManagementPage[]
 --- @field manager ISUIManager
---- @field refreshButton ISButton
 local ISManagementPanel = {}
 ----------------------------------------------------------------------------------------------
 -- ------ Inherent from ISCollapsableWindowJoypad
@@ -30,30 +29,18 @@ function ISManagementPanel:createPages()
     if #self.pages ~= self.manager.numPages then
         if #self.pages < self.manager.numPages then
             for i = #self.pages + 1, self.manager.numPages do
-                self.pages[i] = ISManagementPage:new(0, self.tabs.width, self.tabs.height, self.manager)
+                self.pages[i] = ISManagementPage:new(0, self.tabs.width, self.tabs.height)
                 self.tabs:addView(string.format("Page %d", i), self.pages[i])
                 self.pages[i]:setAnchorRight(true)
                 self.pages[i]:setAnchorBottom(true)
                 self.pages[i]:noBackground()
             end
-            self.tabs.centerTabs = false
-            self.tabs.equalTabWidth = false
         else
             for i = #self.pages, self.manager.numPages + 1, -1 do
                 self.pages[i]:clearAllObjects()
                 self.tabs:removeView(self.pages[i])
             end
         end
-    end
-    if #self.pages <= 0 then
-        self.pages[1] = ISManagementPage:new(0, self.tabs.width, self.tabs.height, self.manager)
-        self.tabs:addView(self.manager.noObjectsMessage, self.pages[1])
-        self.pages[1]:setAnchorRight(true)
-        self.pages[1]:setAnchorBottom(true)
-        self.pages[1]:noBackground()
-        self.tabs.maxLength = self.tabs.width
-        self.tabs.centerTabs = true
-        self.tabs.equalTabWidth = true
     end
 end
 
@@ -63,7 +50,7 @@ function ISManagementPanel:createObjects()
             if self.numObjects >= #self.manager.validatedObjects then
                 break
             end
-            self.pages[i]:addObjectToPage(self.manager.validatedObjects[self.numObjects+1], j, self.width, self.manager.validatedObjects[self.numObjects+1].id)
+            self.pages[i]:addObjectToPage(self.manager.validatedObjects[self.numObjects+1], j, self.width)
             self.numObjects = self.numObjects + 1
         end
     end
@@ -78,35 +65,25 @@ function ISManagementPanel:clearAllPages()
     self.numObjects = 0
 end
 
-function ISManagementPanel:refreshObjects()
-    local time = getTimeInMillis()
-
-    --Clear all objects and pages first
-    local currentViewName = self.tabs.activeView.name; local currentViewIndex = self.tabs:getActiveViewIndex()
-    self:clearAllPages()
-    --Validate all objects
-    self.manager:validateObjects()
-    --Recreate all objects
-    self:createPages()
-    self:createObjects()
-
-    --Reopen last active view
-    local viewExists = false
-    for i = #self.pages, 1, -1 do
-        if currentViewName == string.format("Page %d", i) then
-            viewExists = true
-            self.tabs:activateView(currentViewName)
-            break
+--[[
+function ISManagementPanel:setVisibleFunction()
+    self.visibleTarget = self.manager
+    ---triggerSetVisible
+    ---@param panel ISManagementPanel
+    local function triggerSetVisible(_, panel)
+        if not panel:isVisible() then
+            print("nao visivel")
+            panel:clearAllPages()
+        else
+            print("visivel")
+            panel.manager:validateObjects()
+            panel:createPages()
+            panel:createObjects()
         end
     end
-    if (not viewExists) and (#self.pages >= 2) then self.tabs:activateView(string.format("Page %d", currentViewIndex-1)) end
-
-    local time2 = getTimeInMillis()
-    print(string.format("\nFirst time: %d\nAfter time: %d\nDifference: %d", time, time2, time2-time))
+    self.visibleFunction = triggerSetVisible
 end
-
-
-
+--]]
 --[[**********************************************************************************]]--
 
 ------------------ Functions related to the Panel UIElement ------------------
@@ -115,28 +92,16 @@ end
 function ISManagementPanel:createChildren()
     ISCollapsableWindowJoypad.createChildren(self)
     local th = self:titleBarHeight()
-    local time = getTimeInMillis()
-    --Creating refresh button
-    self.refreshButton = ISButton:new(self.closeButton:getRight() + 2, 0, th+2, th, "", self, ISManagementPanel.refreshObjects)
-    self.refreshButton:initialise()
-    self.refreshButton.borderColor.a = 0.0
-    self.refreshButton.backgroundColor.a = 0.0
-    self.refreshButton.backgroundColorMouseOver.a = 0.0
-    self.refreshButton:setImage(getTexture("media/ui/refreshButton3.png"))
-    self:addChild(self.refreshButton)
 
-    --Creating tab panel
+    --Create tab panel
     self.tabs = ISTabPanel:new(0, th, self.width, self.height-th)
     self.tabs:setAnchorRight(true)
     self.tabs:setAnchorBottom(true)
     self.tabs:setEqualTabWidth(false)
     self:addChild(self.tabs)
 
-
-    --Create all pages and objects
     self:createPages()
     self:createObjects()
-
 
     --[[
     self:addObjectToPage(self.pages[1], "gate_yay_01_8", "Portail Automatiss", " <INDENT:8><RGB:0,1,0> Battery charge: 25/100 <LINE><RGB:1,1,1><INDENT:0>States: <LINE><INDENT:8><RGB:1,0,0> Closed <RGB:1,1,1> | <RGB:0,1,0> Unlocked", {"Use", "Lock", "Copy", "Disconnect"})
@@ -144,8 +109,6 @@ function ISManagementPanel:createChildren()
     self:addObjectToPage(self.pages[1], getTexture("appliances_misc_01_0"), "Generator - ID 1457", " <INDENT:8> Branch Setting: <RGB:1,1,0> Split Power <LINE><RGB:1,1,1><INDENT:0>States: <LINE><INDENT:8><RGB:1,0,0> Off <RGB:1,1,1> | <RGB:0,1,0> Fuel: 65% <RGB:1,1,1> | <RGB:1,1,0> Condition: 96%", {"Turn On", "Split", "Focus", "Disable"})
     --]]
 
-    local time2 = getTimeInMillis()
-    print(string.format("\nFirst time: %d\nAfter time: %d\nDifference: %d", time, time2, time2-time))
 end
 
 ---Triggers when UI gains the Joypad Focus
@@ -228,11 +191,6 @@ function ISManagementPanel:setResizable(resizable)
     end
 end
 
---Declared to in-utilize the 'setInfo' function
-function ISManagementPanel:setInfo(text)
-    return text
-end
-
 ---Triggers when UI is closed
 function ISManagementPanel:close()
     self.manager.x = self.x
@@ -250,8 +208,9 @@ end
 ---@param height number Height of the panel
 ---@param character IsoPlayer Player that's rendering the interface
 ---@param manager ISUIManager Manager of all the ManagementUI elements
+---@param showAllObjects boolean If true, show all objects, even not validated ones
 ---@return ISManagementPanel
-function ISManagementPanel:new(title, x, y, width, height, character, manager)
+function ISManagementPanel:new(title, x, y, width, height, character, manager, showAllObjects)
     ---@type ISManagementPanel
     local o = ISCollapsableWindowJoypad.new(self, x, y, width, height)
     setmetatable(o, self)
