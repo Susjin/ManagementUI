@@ -11,6 +11,9 @@
 --- @field numPages number
 --- @field maxObjects number
 --- @field ignoreScreenWidth boolean
+--- @field showAllObjects boolean If true, show all objects, even not validated ones
+--- @field refreshOnChange boolean If true, the panel will refresh the objects upon adding or removing a object from to manager
+--- @field noObjectsMessage string Message to be shown in the Tabs when there's no objects (320 character max)
 --- @field objects PreUIObject[]
 --- @field validatedObjects PreUIObject[]
 --- @field numObjects number
@@ -28,6 +31,7 @@ local ISUIManager = {}
 --- @field isoObject IsoObject The object that is in that square
 --- @field name string Name of this object (can use RichText tags)
 --- @field description string Description of this object (can use RichText tags)
+--- @field textureName string Texture name of the object
 --- @field squarePos table<string,number> Square XYZ of the object (table must have x, y and z indexes)
 --- @field objectType string Instance of the object being used. e.g. IsoThumpable
 --- @field numButtons number Number of buttons this object has. (min 2, max 6)
@@ -57,11 +61,11 @@ local getCell = getCell
 
 ------------------ Functions related to saving/loading the manager ------------------
 
----Reloads all information of the ISUIManager from another manager table (ModData)
+---Reloads all information of the ISUIManager from another manager table
 ---@param managerTable ISUIManager
 ---@return ISUIManager
-function ISUIManager:reloadFromModData(managerTable)
-    local o = self:initialiseUIManager(managerTable.title, managerTable.maxObjects, managerTable.maxButtons, managerTable.ignoreScreenWidth)
+function ISUIManager:reloadFromTable(managerTable)
+    local o = self:initialiseUIManager(managerTable.title, managerTable.maxObjects, managerTable.maxButtons, managerTable.ignoreScreenWidth, managerTable.showAllObjects, managerTable.refreshOnChange, managerTable.noObjectsMessage)
     o.numPages = managerTable.numPages
     o.objects = managerTable.objects
     o.numObjects = managerTable.numObjects
@@ -115,8 +119,8 @@ function ISUIManager:setupDimensions(player)
     end
     self.height = maxObjectsSheet[self.maxObjects]
 
-    self.x = getPlayerScreenLeft(playerNum) + 100
-    self.y = getPlayerScreenHeight(playerNum) - self.height - 100
+    if self.x == 0 then self.x = getPlayerScreenLeft(playerNum) + 100 end
+    if self.y == 0 then self.y = getPlayerScreenHeight(playerNum) - self.height - 100 end
 end
 
 function ISUIManager:createManagementPanel(player, showAllObjects)
@@ -156,12 +160,14 @@ function ISUIManager:validateObjects()
     local newObjects = {}
     ---@param obj PreUIObject
     for _, obj in pairs(self.objects) do
+        obj.isoObject = nil
         local objectSquare = getCell():getGridSquare(obj.squarePos.x, obj.squarePos.y, obj.squarePos.z)
         if objectSquare then
             local squareObjects = objectSquare:getObjects()
             for i=0, squareObjects:size()-1 do
                 if instanceof(squareObjects:get(i), obj.objectType) and obj.numButtons <= self.maxButtons then
                     obj.isoObject = squareObjects:get(i)
+                    obj.textureName = obj.isoObject:getTextureName()
                 end
             end
         end
@@ -180,6 +186,12 @@ function ISUIManager:calculateValidatedPages()
     self.numPages = pages > 0 and math.ceil(pages) or 0
 end
 
+function ISUIManager:autoRefresh()
+    if self.panel and self.panel:isVisible() then
+        self.panel:refreshObjects()
+    end
+end
+
 ---Allocates a object before being added to the UI
 ---@param name string Name of this object (can use RichText tags)
 ---@param description string Description of this object (can use RichText tags)
@@ -192,7 +204,7 @@ end
 ---@param param2 any Can be any extra parameters used with the 'onClickButton' function
 ---@param param3 any Can be any extra parameters used with the 'onClickButton' function
 ---@param param4 any Can be any extra parameters used with the 'onClickButton' function
----@return PreUIObject
+---@return PreUIObject A object ready to be added to the list
 function ISUIManager:allocObject(name, description, squarePos, objectType, numButtons, buttonNames, onClickButton, param1, param2, param3, param4)
     ---@type PreUIObject
     local object = {}
@@ -200,6 +212,7 @@ function ISUIManager:allocObject(name, description, squarePos, objectType, numBu
     object.id = self.numObjects
     object.name = name
     object.description = description
+    object.textureName = nil
     object.squarePos = squarePos
     object.objectType = objectType
     object.numButtons = numButtons
@@ -225,14 +238,15 @@ end
 ---@param param2 any Can be any extra parameters used with the 'onClickButton' function
 ---@param param3 any Can be any extra parameters used with the 'onClickButton' function
 ---@param param4 any Can be any extra parameters used with the 'onClickButton' function
----@return PreUIObject
+---@return PreUIObject A pointer to the object added
 function ISUIManager:addObject(name, description, squarePos, objectType, numButtons, buttonNames, onClickButton, param1, param2, param3, param4)
     local object = self:allocObject(name, description, squarePos, objectType, numButtons, buttonNames, onClickButton, param1, param2, param3, param4);
 
     self.objects[self.numObjects] = object;
     self.numObjects = self.numObjects + 1;
-    self:calculatePages()
 
+    self:calculatePages()
+    if self.refreshOnChange then self:autoRefresh() end
     return object;
 end
 
@@ -248,7 +262,7 @@ end
 ---@param param2 any Can be any extra parameters used with the 'onClickButton' function
 ---@param param3 any Can be any extra parameters used with the 'onClickButton' function
 ---@param param4 any Can be any extra parameters used with the 'onClickButton' function
----@return PreUIObject
+---@return PreUIObject A pointer to the object added
 function ISUIManager:addObjectOnTop(name, description, squarePos, objectType, numButtons, buttonNames, onClickButton, param1, param2, param3, param4)
     local newObjects = {};
     for _, object in pairs(self.objects) do
@@ -261,32 +275,10 @@ function ISUIManager:addObjectOnTop(name, description, squarePos, objectType, nu
     object.id = 1;
     self.objects[1] = object;
     self.numObjects = self.numObjects + 1;
+
     self:calculatePages()
+    if self.refreshOnChange then self:autoRefresh() end
     return object;
-end
-
----Gets a object by it's given name. If object don't exist, return nil
----@param name string Object name
----@return PreUIObject
-function ISUIManager:getObjectByName(name)
-    for _, object in pairs(self.objects) do
-        if object.name == name then
-            return object
-        end
-    end
-    return nil
-end
-
----Gets a object by it's given name. If object don't exist, return nil
----@param index number Object's index on the list
----@return PreUIObject
-function ISUIManager:getObjectByIndex(index)
-    for _, object in pairs(self.objects) do
-        if object.id == index then
-            return object
-        end
-    end
-    return nil
 end
 
 ---Adds a object after another object on the list before being added to the UI
@@ -302,7 +294,7 @@ end
 ---@param param2 any Can be any extra parameters used with the 'onClickButton' function
 ---@param param3 any Can be any extra parameters used with the 'onClickButton' function
 ---@param param4 any Can be any extra parameters used with the 'onClickButton' function
----@return PreUIObject
+---@return PreUIObject A pointer to the object added
 function ISUIManager:addObjectAfter(previousName, name, description, squarePos, objectType, numButtons, buttonNames, onClickButton, param1, param2, param3, param4)
     local previousObject = self:getObjectByName(previousName)
     if not previousObject then
@@ -325,6 +317,7 @@ function ISUIManager:addObjectAfter(previousName, name, description, squarePos, 
     end
 
     self:calculatePages()
+    if self.refreshOnChange then self:autoRefresh() end
     return object
 end
 
@@ -341,7 +334,7 @@ end
 ---@param param2 any Can be any extra parameters used with the 'onClickButton' function
 ---@param param3 any Can be any extra parameters used with the 'onClickButton' function
 ---@param param4 any Can be any extra parameters used with the 'onClickButton' function
----@return PreUIObject
+---@return PreUIObject A pointer to the object added
 function ISUIManager:addObjectBefore(nextName, name, description, squarePos, objectType, numButtons, buttonNames, onClickButton, param1, param2, param3, param4)
     local nextObject = self:getObjectByName(nextName)
     if not nextObject then
@@ -369,6 +362,7 @@ function ISUIManager:addObjectBefore(nextName, name, description, squarePos, obj
     end
 
     self:calculatePages()
+    if self.refreshOnChange then self:autoRefresh() end
     return object
 end
 ---Adds a object at a specified index position related to all other objects
@@ -384,7 +378,7 @@ end
 ---@param param2 any Can be any extra parameters used with the 'onClickButton' function
 ---@param param3 any Can be any extra parameters used with the 'onClickButton' function
 ---@param param4 any Can be any extra parameters used with the 'onClickButton' function
----@return PreUIObject
+---@return PreUIObject A pointer to the object added
 function ISUIManager:addObjectAtIndex(index, name, description, squarePos, objectType, numButtons, buttonNames, onClickButton, param1, param2, param3, param4)
     if #self.objects < index then
         print("ManagementUI: Number of objects is smaller than: " .. index)
@@ -409,11 +403,13 @@ function ISUIManager:addObjectAtIndex(index, name, description, squarePos, objec
     end
 
     self:calculatePages()
+    if self.refreshOnChange then self:autoRefresh() end
     return object
 end
 
 ---Removes a given object from the list by it's given name before being added to the UI
 ---@param removeName string Name of the object to be removed (can use RichText tags)
+---@return boolean Returns true if correctly removed, false if not
 function ISUIManager:removeObjectByName(removeName)
     local removeObject = self:getObjectByName(removeName)
     if not removeObject then
@@ -428,7 +424,9 @@ function ISUIManager:removeObjectByName(removeName)
     end
     self.objects[#self.objects] = nil
     self.numObjects = self.numObjects - 1
+
     self:calculatePages()
+    if self.refreshOnChange then self:autoRefresh() end
     return true
 end
 
@@ -439,7 +437,32 @@ function ISUIManager:removeLastObject()
     self:calculatePages()
 end
 
+---Gets a object by it's given name. If object don't exist, return nil
+---@param name string Object's name
+---@return PreUIObject A pointer to the object
+function ISUIManager:getObjectByName(name)
+    for _, object in pairs(self.objects) do
+        if object.name == name then
+            return object
+        end
+    end
+    return nil
+end
+
+---Gets a object by it's given name. If object don't exist, return nil
+---@param index number Object's index on the list
+---@return PreUIObject A pointer to the object
+function ISUIManager:getObjectByIndex(index)
+    for _, object in pairs(self.objects) do
+        if object.id == index then
+            return object
+        end
+    end
+    return nil
+end
+
 ---Gets a table containing all objects names
+---@return string[] Table containing all names
 function ISUIManager:getAllObjectsNames()
     local names = {}
     for i, obj in pairs(self.objects) do
@@ -471,8 +494,11 @@ end
 ---@param maxObjects number Maximum amount of objects per page (min 4, max 8)
 ---@param maxButtons number Maximum amount of buttons per object (min 2, max 6)
 ---@param ignoreScreenWidth boolean If true, width calculations will ignore the current resolution, if false, it may reduce the max amount of buttons if the screen is too small (only affects resolutions lower than 1024x768)
+---@param showAllObjects boolean If true, show all objects, even not validated ones
+---@param refreshOnChange boolean If true, the panel will refresh the objects upon adding or removing a object from to manager
+---@param noObjectsMessage string Message to be shown in the Tabs when there's no objects (320 character max)
 ---@return ISUIManager
-function ISUIManager:initialiseUIManager(title, maxObjects, maxButtons, ignoreScreenWidth)
+function ISUIManager:initialiseUIManager(title, maxObjects, maxButtons, ignoreScreenWidth, showAllObjects, refreshOnChange, noObjectsMessage)
     ---@type ISUIManager
     local o = {}
     setmetatable(o, self)
@@ -489,7 +515,10 @@ function ISUIManager:initialiseUIManager(title, maxObjects, maxButtons, ignoreSc
     o.objects = {}
     o.validatedObjects = {}
     o.numObjects = 1
-    o.ignoreScreenWidth = ignoreScreenWidth
+    o.ignoreScreenWidth = ignoreScreenWidth or false
+    o.showAllObjects = showAllObjects or false
+    o.refreshOnChange = refreshOnChange or true
+    o.noObjectsMessage = noObjectsMessage or "teteNo Objects"
 
     o.panel = nil
 

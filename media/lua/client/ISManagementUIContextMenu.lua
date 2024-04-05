@@ -26,16 +26,16 @@ function ISManagementUIContextMenu.getUIManagerFromModData()
         local found = false
         for _, manager in pairs(managers) do
             if manager.title == "TestManagementUI" then
-                UIManager = ISUIManager:reloadFromModData(manager)
+                UIManager = ISUIManager:reloadFromTable(manager)
                 found = true
                 break
             end
         end
         if not found then
-            UIManager = ISUIManager:initialiseUIManager("TestManagementUI", 8, 6, false)
+            UIManager = ISUIManager:initialiseUIManager("TestManagementUI", 8, 6, false, false, false, "There are no objects now")
         end
     else
-        UIManager = ISUIManager:initialiseUIManager("TestManagementUI", 8, 6, false)
+        UIManager = ISUIManager:initialiseUIManager("TestManagementUI", 8, 6, false, false, false, "There are no objects now")
     end
 end
 
@@ -50,6 +50,9 @@ function ISManagementUIContextMenu.saveUIManagerToModData()
                 manager.maxObjects = UIManager.maxObjects
                 manager.maxButtons = UIManager.maxButtons
                 manager.ignoreScreenWidth = UIManager.ignoreScreenWidth
+                manager.showAllObjects = UIManager.showAllObjects
+                manager.refreshOnChange = UIManager.refreshOnChange
+                manager.noObjectsMessage = "No Objects"--UIManager.noObjectsMessage
                 manager.numPages = UIManager.numPages
                 manager.objects = UIManager.objects
                 manager.numObjects = UIManager.numObjects
@@ -60,6 +63,7 @@ function ISManagementUIContextMenu.saveUIManagerToModData()
                 return
             end
         end
+        --[[
         managers[#managers+1] = {}
         managers[#managers].title = UIManager.title
         managers[#managers].maxObjects = UIManager.maxObjects
@@ -71,7 +75,7 @@ function ISManagementUIContextMenu.saveUIManagerToModData()
         managers[#managers].x = UIManager.x
         managers[#managers].y = UIManager.y
         managers[#managers].width = UIManager.width
-        managers[#managers].height = UIManager.height
+        managers[#managers].height = UIManager.height--]]
     end
 end
 
