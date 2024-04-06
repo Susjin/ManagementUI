@@ -22,7 +22,6 @@
 --- @field width number
 --- @field height number
 --- @field panel ISManagementPanel
---- @field
 local ISUIManager = {}
 ----------------------------------------------------------------------------------------------
 -- ------ Declaring Classes ------ --

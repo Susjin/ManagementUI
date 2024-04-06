@@ -74,7 +74,7 @@ function ISManagementObject:createButton(id)
     local posX = checkButtonPosXByID(id)
     local posY = checkButtonPosYByID(id)
 
-    self.buttons[id] = ISButton:new(self.width - posX, posY, 70, 30, self.buttonNames[id], self.isoObject, function(target, but) print(target:getTextureName());print(but.internal); end)
+    self.buttons[id] = ISButton:new(self.width - posX, posY, 70, 30, self.buttonNames[id], self, function(target, but) target:updateObjectTexture();print(but.internal); end)
     self.buttons[id]:initialise()
     self.buttons[id]:instantiate()
     self.buttons[id].borderColor = {r=1, g=1, b=1, a=0.1}
