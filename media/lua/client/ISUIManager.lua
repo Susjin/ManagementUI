@@ -50,8 +50,8 @@ The game needed 34ms to create everything said on my computer, the results may v
 -- ------ Setting up Locals ------ --
 local ISManagementPanel = require "ISManagementPanel"
 
-local maxButtonsSheet = {320, 320, 400, 400, 480, 480}
-local maxObjectsSheet = {436, 436, 436, 436, 536, 636, 736, 836}
+local numButtonsSheet = { 320, 320, 400, 400, 480, 480}
+local numObjectsSheet = { 436, 436, 436, 436, 536, 636, 736, 836}
 
 local pairs = pairs
 local getCell = getCell
@@ -103,7 +103,7 @@ function ISUIManager:setupDimensions(player)
             self.maxButtons = screenMaxButtons
         end
     end
-    self.width = maxButtonsSheet[self.maxButtons]
+    self.width = numButtonsSheet[self.maxButtons]
 
     --Height of the panel
     if playerHeight > 1200 then
@@ -116,7 +116,7 @@ function ISUIManager:setupDimensions(player)
     if screenMaxObjects < self.maxObjects then
         self.maxObjects = screenMaxObjects
     end
-    self.height = maxObjectsSheet[self.maxObjects]
+    self.height = numObjectsSheet[self.maxObjects]
 
     if self.x == 0 then self.x = getPlayerScreenLeft(playerNum) + 100 end
     if self.y == 0 then self.y = getPlayerScreenHeight(playerNum) - self.height - 100 end
