@@ -33,13 +33,6 @@ local ISUIManager = {}
 --- @field textureName string Texture name of the object
 --- @field squarePos table<string,number> Square XYZ of the object (table must have x, y and z indexes)
 --- @field objectType string Instance of the object being used. e.g. IsoThumpable
---- @field numButtons number Number of buttons this object has. (min 2, max 6)
---- @field buttonNames string[] Ordered table with each position being a button's name respectively
---- @field onClickButton function Function that will trigger on every clicked button (Use 'if' and 'elseif' with the button names)
---- @field param1 any Can be any extra parameters used with the 'onClickButton' function
---- @field param2 any Can be any extra parameters used with the 'onClickButton' function
---- @field param3 any Can be any extra parameters used with the 'onClickButton' function
---- @field param4 any Can be any extra parameters used with the 'onClickButton' function
 
 -- Testing ms lag:
 --[[
@@ -164,7 +157,7 @@ function ISUIManager:validateObjects()
         if objectSquare then
             local squareObjects = objectSquare:getObjects()
             for i=0, squareObjects:size()-1 do
-                if instanceof(squareObjects:get(i), obj.objectType) and obj.numButtons <= self.maxButtons then
+                if instanceof(squareObjects:get(i), obj.objectType) then
                     obj.isoObject = squareObjects:get(i)
                     obj.textureName = obj.isoObject:getTextureName()
                 end
@@ -196,15 +189,8 @@ end
 ---@param description string Description of this object (can use RichText tags)
 ---@param squarePos table<string,number> Square XYZ of the object (table must have x, y and z indexes)
 ---@param objectType string Instance of the object being used. e.g. IsoThumpable
----@param numButtons number Number of buttons this object has. (min 2, max 6)
----@param buttonNames string[] Ordered table with each position being a button's name respectively
----@param onClickButton function Function that will trigger on every clicked button (Use 'if' and 'elseif' with the button names)
----@param param1 any Can be any extra parameters used with the 'onClickButton' function
----@param param2 any Can be any extra parameters used with the 'onClickButton' function
----@param param3 any Can be any extra parameters used with the 'onClickButton' function
----@param param4 any Can be any extra parameters used with the 'onClickButton' function
 ---@return PreUIObject A object ready to be added to the list
-function ISUIManager:allocObject(name, description, squarePos, objectType, numButtons, buttonNames, onClickButton, param1, param2, param3, param4)
+function ISUIManager:allocObject(name, description, squarePos, objectType)
     ---@type PreUIObject
     local object = {}
     object.isoObject = nil
@@ -214,13 +200,6 @@ function ISUIManager:allocObject(name, description, squarePos, objectType, numBu
     object.textureName = nil
     object.squarePos = squarePos
     object.objectType = objectType
-    object.numButtons = numButtons
-    object.buttonNames = buttonNames
-    object.onClickButton = onClickButton
-    object.param1 = param1
-    object.param2 = param2
-    object.param3 = param3
-    object.param4 = param4
 
     return object
 end
@@ -230,16 +209,9 @@ end
 ---@param description string Description of this object (can use RichText tags)
 ---@param squarePos table<string,number> Square XYZ of the object (table must have x, y and z indexes)
 ---@param objectType string Instance of the object being used. e.g. IsoThumpable
----@param numButtons number Number of buttons this object has. (min 2, max 6)
----@param buttonNames string[] Ordered table with each position being a button's name respectively
----@param onClickButton function Function that will trigger on every clicked button (Use 'if' and 'elseif' with the button names)
----@param param1 any Can be any extra parameters used with the 'onClickButton' function
----@param param2 any Can be any extra parameters used with the 'onClickButton' function
----@param param3 any Can be any extra parameters used with the 'onClickButton' function
----@param param4 any Can be any extra parameters used with the 'onClickButton' function
 ---@return PreUIObject A pointer to the object added
-function ISUIManager:addObject(name, description, squarePos, objectType, numButtons, buttonNames, onClickButton, param1, param2, param3, param4)
-    local object = self:allocObject(name, description, squarePos, objectType, numButtons, buttonNames, onClickButton, param1, param2, param3, param4);
+function ISUIManager:addObject(name, description, squarePos, objectType)
+    local object = self:allocObject(name, description, squarePos, objectType);
 
     self.objects[self.numObjects] = object;
     self.numObjects = self.numObjects + 1;
@@ -254,15 +226,8 @@ end
 ---@param description string Description of this object (can use RichText tags)
 ---@param squarePos table<string,number> Square XYZ of the object (table must have x, y and z indexes)
 ---@param objectType string Instance of the object being used. e.g. IsoThumpable
----@param numButtons number Number of buttons this object has. (min 2, max 6)
----@param buttonNames string[] Ordered table with each position being a button's name respectively
----@param onClickButton function Function that will trigger on every clicked button (Use 'if' and 'elseif' with the button names)
----@param param1 any Can be any extra parameters used with the 'onClickButton' function
----@param param2 any Can be any extra parameters used with the 'onClickButton' function
----@param param3 any Can be any extra parameters used with the 'onClickButton' function
----@param param4 any Can be any extra parameters used with the 'onClickButton' function
 ---@return PreUIObject A pointer to the object added
-function ISUIManager:addObjectOnTop(name, description, squarePos, objectType, numButtons, buttonNames, onClickButton, param1, param2, param3, param4)
+function ISUIManager:addObjectOnTop(name, description, squarePos, objectType)
     local newObjects = {};
     for _, object in pairs(self.objects) do
         object.id = object.id + 1;
@@ -270,7 +235,7 @@ function ISUIManager:addObjectOnTop(name, description, squarePos, objectType, nu
     end
 
     self.objects = newObjects;
-    local object = self:allocObject(name, description, squarePos, objectType, numButtons, buttonNames, onClickButton, param1, param2, param3, param4);
+    local object = self:allocObject(name, description, squarePos, objectType);
     object.id = 1;
     self.objects[1] = object;
     self.numObjects = self.numObjects + 1;
@@ -286,19 +251,12 @@ end
 ---@param description string Description of this object (can use RichText tags)
 ---@param squarePos table<string,number> Square XYZ of the object (table must have x, y and z indexes)
 ---@param objectType string Instance of the object being used. e.g. IsoThumpable
----@param numButtons number Number of buttons this object has. (min 2, max 6)
----@param buttonNames string[] Ordered table with each position being a button's name respectively
----@param onClickButton function Function that will trigger on every clicked button (Use 'if' and 'elseif' with the button names)
----@param param1 any Can be any extra parameters used with the 'onClickButton' function
----@param param2 any Can be any extra parameters used with the 'onClickButton' function
----@param param3 any Can be any extra parameters used with the 'onClickButton' function
----@param param4 any Can be any extra parameters used with the 'onClickButton' function
 ---@return PreUIObject A pointer to the object added
-function ISUIManager:addObjectAfter(previousName, name, description, squarePos, objectType, numButtons, buttonNames, onClickButton, param1, param2, param3, param4)
+function ISUIManager:addObjectAfter(previousName, name, description, squarePos, objectType)
     local previousObject = self:getObjectByName(previousName)
     if not previousObject then
         print("ManagementUI: Previous object not found: " .. previousName)
-        return self:addObject(name, description, squarePos, objectType, numButtons, buttonNames, onClickButton, param1, param2, param3, param4)
+        return self:addObject(name, description, squarePos, objectType)
     end
 
     local index = previousObject.id
@@ -306,7 +264,7 @@ function ISUIManager:addObjectAfter(previousName, name, description, squarePos, 
         self.objects[i+1] = self.objects[i]
     end
 
-    local object = self:allocObject(name, description, squarePos, objectType, numButtons, buttonNames, onClickButton, param1, param2, param3, param4);
+    local object = self:allocObject(name, description, squarePos, objectType);
     object.id = index+1;
     self.objects[index+1] = object;
     self.numObjects = self.numObjects + 1;
@@ -326,32 +284,25 @@ end
 ---@param description string Description of this object (can use RichText tags)
 ---@param squarePos table<string,number> Square XYZ of the object (table must have x, y and z indexes)
 ---@param objectType string Instance of the object being used. e.g. IsoThumpable
----@param numButtons number Number of buttons this object has. (min 2, max 6)
----@param buttonNames string[] Ordered table with each position being a button's name respectively
----@param onClickButton function Function that will trigger on every clicked button (Use 'if' and 'elseif' with the button names)
----@param param1 any Can be any extra parameters used with the 'onClickButton' function
----@param param2 any Can be any extra parameters used with the 'onClickButton' function
----@param param3 any Can be any extra parameters used with the 'onClickButton' function
----@param param4 any Can be any extra parameters used with the 'onClickButton' function
 ---@return PreUIObject A pointer to the object added
-function ISUIManager:addObjectBefore(nextName, name, description, squarePos, objectType, numButtons, buttonNames, onClickButton, param1, param2, param3, param4)
+function ISUIManager:addObjectBefore(nextName, name, description, squarePos, objectType)
     local nextObject = self:getObjectByName(nextName)
     if not nextObject then
         print("ManagementUI: Next object not found: " .. nextName)
-        return self:addObject(name, description, squarePos, objectType, numButtons, buttonNames, onClickButton, param1, param2, param3, param4)
+        return self:addObject(name, description, squarePos, objectType)
     end
     local index = nextObject.id
 
 
     if index == 1 then
-        return self:addObjectOnTop(name, description, squarePos, objectType, numButtons, buttonNames, onClickButton, param1, param2, param3, param4)
+        return self:addObjectOnTop(name, description, squarePos, objectType)
     end
 
     for i = #self.objects, index, -1 do
         self.objects[i+1] = self.objects[i]
     end
 
-    local object = self:allocObject(name, description, squarePos, objectType, numButtons, buttonNames, onClickButton, param1, param2, param3, param4);
+    local object = self:allocObject(name, description, squarePos, objectType);
     object.id = index;
     self.objects[index] = object;
     self.numObjects = self.numObjects + 1;
@@ -370,29 +321,22 @@ end
 ---@param description string Description of this object (can use RichText tags)
 ---@param squarePos table<string,number> Square XYZ of the object (table must have x, y and z indexes)
 ---@param objectType string Instance of the object being used. e.g. IsoThumpable
----@param numButtons number Number of buttons this object has. (min 2, max 6)
----@param buttonNames string[] Ordered table with each position being a button's name respectively
----@param onClickButton function Function that will trigger on every clicked button (Use 'if' and 'elseif' with the button names)
----@param param1 any Can be any extra parameters used with the 'onClickButton' function
----@param param2 any Can be any extra parameters used with the 'onClickButton' function
----@param param3 any Can be any extra parameters used with the 'onClickButton' function
----@param param4 any Can be any extra parameters used with the 'onClickButton' function
 ---@return PreUIObject A pointer to the object added
-function ISUIManager:addObjectAtIndex(index, name, description, squarePos, objectType, numButtons, buttonNames, onClickButton, param1, param2, param3, param4)
+function ISUIManager:addObjectAtIndex(index, name, description, squarePos, objectType)
     if #self.objects < index then
         print("ManagementUI: Number of objects is smaller than: " .. index)
-        return self:addObject(name, description, squarePos, objectType, numButtons, buttonNames, onClickButton, param1, param2, param3, param4)
+        return self:addObject(name, description, squarePos, objectType)
     end
 
     if index == 1 then
-        return self:addObjectOnTop(name, description, squarePos, objectType, numButtons, buttonNames, onClickButton, param1, param2, param3, param4)
+        return self:addObjectOnTop(name, description, squarePos, objectType)
     end
 
     for i = #self.objects, index, -1 do
         self.objects[i+1] = self.objects[i]
     end
 
-    local object = self:allocObject(name, description, squarePos, objectType, numButtons, buttonNames, onClickButton, param1, param2, param3, param4);
+    local object = self:allocObject(name, description, squarePos, objectType);
     object.id = index;
     self.objects[index] = object;
     self.numObjects = self.numObjects + 1;
@@ -471,6 +415,18 @@ function ISUIManager:getAllObjectsNames()
 end
 
 --[[**********************************************************************************]]--
+
+---Gets a table with the XYZ position in the world of a given object (Used to add a object to the UI)
+---@param object IsoObject Object to get the square XYZ
+---@return table<string,number> Table containing the XYZ position of a square with the x, y and z indexes
+function ISUIManager.getObjectSquarePos(object)
+    if object and instanceof(object, "IsoObject") then
+        local square = object.object:getSquare()
+        return {x = square:getX(), y = square:getY(), z = square:getZ()}
+    else
+        return {}
+    end
+end
 
 ---Sets all values from max buttons and objects, so that it's always: (6 >= n >= 2)
 function ISUIManager:correctMaximumValues()

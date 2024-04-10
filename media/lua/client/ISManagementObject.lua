@@ -121,7 +121,6 @@ end
 ------------------ Functions related to the Object UIElement ------------------
 
 function ISManagementObject:updateObjectTexture()
-    print("Ttetetetetetetetete")
     if self.isoObject and self.isoObject:getSquare() then
         local textureName = self.isoObject:getTextureName()
         self.texture = getTexture(textureName)
@@ -130,6 +129,8 @@ function ISManagementObject:updateObjectTexture()
 end
 
 function ISManagementObject:createChildren()
+    --TODO: Setup all verifications for the function, button names, onClickButton and params
+
     --Buttons creation
     for i=1, self.numButtons do
         self:createButton(i)
@@ -138,7 +139,13 @@ function ISManagementObject:createChildren()
     self:insertNewLineOfButtons(self.buttons[5], self.buttons[3], self.buttons[1])
     self:insertNewLineOfButtons(self.buttons[6], self.buttons[4], self.buttons[2])
 
-    --Adding TextPanel as a child
+    --Creating and adding TextPanel as a child
+    self.descriptionPanel = ISRichTextPanel:new(56, 0, (self.width) - (50 - 4) - (checkDescPanelWidth(self.numButtons)), 100)
+    self.descriptionPanel:initialise();
+    self.descriptionPanel:noBackground()
+    self.descriptionPanel.backgroundColor = {r=1,g=0,b=0,a=0.5}
+    self.descriptionPanel.autosetheight = false
+    self.descriptionPanel:setMargins(0,12,0,0)
     self:addChild(self.descriptionPanel)
     self.descriptionPanel.text = " <H2> " .. self.name .. " <LINE><TEXT><RGB:1,1,1> "
     self.descriptionPanel.text = self.descriptionPanel.text .. self.description
@@ -167,15 +174,8 @@ end
 ---@param isoObject IsoObject The IsoObject that is being targeted by this object
 ---@param name string Name of this object (can use RichText tags)
 ---@param description string Description of this object (can use RichText tags)
----@param numButtons number Number of buttons this object has. (max 6)
----@param buttonNames string[] Ordered table with each position being a button's name respectively
----@param onClickButton function Function that will trigger on every clicked button (Use 'if' and 'elseif' with the button names)
----@param param1 any Can be any extra parameters used with the 'onClickButton' function
----@param param2 any Can be any extra parameters used with the 'onClickButton' function
----@param param3 any Can be any extra parameters used with the 'onClickButton' function
----@param param4 any Can be any extra parameters used with the 'onClickButton' function
 ---@param manager ISUIManager
-function ISManagementObject:new(y, width, id, isoObject, name, description, numButtons, buttonNames, onClickButton, param1, param2, param3, param4, manager)
+function ISManagementObject:new(y, width, id, isoObject, name, description, manager)
     ---@type ISManagementObject
     local o = ISPanelJoypad:new(0, y, width, 100)
     setmetatable(o, self)
@@ -187,23 +187,17 @@ function ISManagementObject:new(y, width, id, isoObject, name, description, numB
     o.texture = isoObject and getTexture(isoObject:getTextureName()) or getTexture(manager.objects[id].textureName)
     o.name = name or ""
     o.description = description or ""
-    o.numButtons = numButtons or 0
-    o.buttonNames = buttonNames or {"nil", "nil", "nil", "nil"}
-    o.onClickButton = onClickButton
-    o.param1 = param1
-    o.param2 = param2
-    o.param3 = param3
-    o.param4 = param4
+    o.numButtons = 0
+    o.buttonNames = {"nil", "nil", "nil", "nil", "nil", "nil"}
+    o.onClickButton = nil
+    o.param1 = nil
+    o.param2 = nil
+    o.param3 = nil
+    o.param4 = nil
     o.manager = manager
 
     o.buttons = {}
-
-    o.descriptionPanel = ISRichTextPanel:new(56, 0, (width) - (50 - 4) - (checkDescPanelWidth(numButtons)), 100)
-    o.descriptionPanel:initialise();
-    o.descriptionPanel:noBackground()
-    o.descriptionPanel.backgroundColor = {r=1,g=0,b=0,a=0.5}
-    o.descriptionPanel.autosetheight = false
-    o.descriptionPanel:setMargins(0,12,0,0)
+    o.descriptionPanel = nil
 
     return o
 end

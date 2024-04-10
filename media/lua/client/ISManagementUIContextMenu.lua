@@ -16,10 +16,6 @@ local UIManager
 local pairs = pairs
 
 
---TODO: Check textures
-
-
-
 function ISManagementUIContextMenu.getUIManagerFromModData()
     local managers = ModData.getOrCreate("ManagementUIManagers")
     if #managers > 0 then
@@ -87,11 +83,7 @@ end
 
 function ISManagementUIContextMenu.addObject(object, button, player)
     if button.internal == "OK" then
-        ---@type IsoGridSquare
-        local square = object.object:getSquare()
-        local objectSquare = {x = square:getX(), y = square:getY(), z = square:getZ()}
-
-        UIManager:addObject(button.parent.entry:getText(), "", objectSquare, object.type, 6, {"Test1", "Test2", "Test3", "Test4", "Test5", "Test6"}, function(target, but) print(but.internal) end)
+        UIManager:addObject(button.parent.entry:getText(), "", UIManager.getObjectSquarePos(object), object.type)
 
         player:Say("Saved")
     end
