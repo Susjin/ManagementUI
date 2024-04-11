@@ -9,6 +9,7 @@
 --- @class ISManagementObject : ISPanelJoypad
 --- @field id number ID of this object on the manager
 --- @field isoObject IsoObject The IsoObject that is being targeted by this object
+--- @field objectType String Instance of the object being used. e.g. IsoThumpable
 --- @field texture Texture The Texture of the IsoObject to be rendered
 --- @field name string Name of this object (can use RichText tags)
 --- @field description string Description of this object (can use RichText tags)
@@ -16,16 +17,18 @@
 --- @field buttons ISButton[] Ordered table with each position being a ISButton
 --- @field buttonNames string[] Ordered table with each position being a button's name respectively
 --- @field onClickButton function Function that will trigger on every clicked button (Use 'if' and 'elseif' with the button names)
---- @field param1 any Can be any extra parameters used with the 'onClickButton' function
---- @field param2 any Can be any extra parameters used with the 'onClickButton' function
---- @field param3 any Can be any extra parameters used with the 'onClickButton' function
---- @field param4 any Can be any extra parameters used with the 'onClickButton' function
+--- @field character IsoPlayer Object of the player that is interacting with the UI Panel
 --- @field descriptionPanel ISRichTextPanel The RichText panel that is placed after the texture
 --- @field manager ISUIManager
 local ISManagementObject = {}
 ----------------------------------------------------------------------------------------------
 -- ------ Inherent from ISPanelJoypad -- ------
 ISManagementObject = ISPanelJoypad:derive("ISManagementObject")
+
+-- - Setting up Locals
+local ObjectButtons = require("ISManagementObjectButtons")
+
+
 
 -- ------ Fixing the vanilla 'setOnClick' ISButton function -- ------
 local _ = ISButton.setOnClick
@@ -74,12 +77,12 @@ function ISManagementObject:createButton(id)
     local posX = checkButtonPosXByID(id)
     local posY = checkButtonPosYByID(id)
 
-    self.buttons[id] = ISButton:new(self.width - posX, posY, 70, 30, self.buttonNames[id], self, function(target, but) target:updateObjectTexture();print(but.internal); end)
+    self.buttons[id] = ISButton:new(self.width - posX, posY, 70, 30, self.buttonNames[id], self.isoObject, function(target, but) print(target:getObjectName());print(but.internal); end)
     self.buttons[id]:initialise()
     self.buttons[id]:instantiate()
     self.buttons[id].borderColor = {r=1, g=1, b=1, a=0.1}
     self.buttons[id].internal = self.buttonNames[id]
-    self:updateButtonOnClick(id, self.param1, self.param2, self.param3, self.param4)
+    self:updateButtonOnClick(id, self.manager.panel.character)
 end
 
 function ISManagementObject:setButtonNameByID(name, id)
@@ -87,13 +90,21 @@ function ISManagementObject:setButtonNameByID(name, id)
     self.buttons[id].internal = name
 end
 
-function ISManagementObject:updateButtonOnClick(id, param1, param2, param3, param4)
+function ISManagementObject:updateButtonOnClick(id, player)
     if self.onClickButton == nil then return end
-    local function tempOnClick(object, but, prm1, prm2, prm3, prm4)
-        self.onClickButton(object, but, prm1, prm2, prm3, prm4)
-        self:updateObjectTexture()
+    ---@param target IsoObject
+    ---@param but ISButton
+    ---@param character IsoPlayer
+    ---@param managementObject ISManagementObject
+    local function tempOnClick(target, but, character, managementObject, arg3, arg4)
+        if managementObject.isoObject then
+            managementObject.onClickButton(target, but, character, managementObject, arg3, arg4)
+        else
+            but.onclick(but.target, but, but.onClickArgs[1], but.onClickArgs[2], but.onClickArgs[3], but.onClickArgs[4])
+        end
+        managementObject:updateObjectTexture()
     end
-    self.buttons[id]:setOnClick(tempOnClick, param1, param2, param3, param4)
+    self.buttons[id]:setOnClick(tempOnClick, player, self)
 end
 
 --[[**********************************************************************************]]--
@@ -118,6 +129,31 @@ end
 
 --[[**********************************************************************************]]--
 
+------------------ Functions related to Object Properties ------------------
+
+function ISManagementObject:getObjectNumButtons()
+    if ObjectButtons[self.objectType] then
+        return #ObjectButtons[self.objectType].buttonNames
+    end
+    return 0
+end
+
+function ISManagementObject:getObjectButtonNames()
+    if ObjectButtons[self.objectType] then
+        return ObjectButtons[self.objectType].buttonNames
+    end
+    return {"", "", "", "", "", ""}
+end
+
+function ISManagementObject:getObjectOnClickFunction()
+    if ObjectButtons[self.objectType] then
+        return ObjectButtons[self.objectType].func
+    end
+    return function(target, button, player) print(string.format("Function not found!\nPlayer: %s\nObject: %s\nButton: %s\n", player:getUsername(), target:getObjectName(), button.title)) end
+end
+
+--[[**********************************************************************************]]--
+
 ------------------ Functions related to the Object UIElement ------------------
 
 function ISManagementObject:updateObjectTexture()
@@ -130,6 +166,10 @@ end
 
 function ISManagementObject:createChildren()
     --TODO: Setup all verifications for the function, button names, onClickButton and params
+    --Getting all current object properties from the other file
+    self.numButtons = self:getObjectNumButtons()
+    self.buttonNames = self:getObjectButtonNames()
+    self.onClickButton = self:getObjectOnClickFunction()
 
     --Buttons creation
     for i=1, self.numButtons do
@@ -172,10 +212,11 @@ end
 ---@param width number Width of the object (must be the same of the window)
 ---@param id number ID of this object on the manager
 ---@param isoObject IsoObject The IsoObject that is being targeted by this object
+---@param objectType string Instance of the object being used. e.g. IsoThumpable
 ---@param name string Name of this object (can use RichText tags)
 ---@param description string Description of this object (can use RichText tags)
 ---@param manager ISUIManager
-function ISManagementObject:new(y, width, id, isoObject, name, description, manager)
+function ISManagementObject:new(y, width, id, isoObject, objectType, name, description, manager)
     ---@type ISManagementObject
     local o = ISPanelJoypad:new(0, y, width, 100)
     setmetatable(o, self)
@@ -184,16 +225,14 @@ function ISManagementObject:new(y, width, id, isoObject, name, description, mana
 
     o.id = id
     o.isoObject = isoObject
+    o.objectType = objectType
     o.texture = isoObject and getTexture(isoObject:getTextureName()) or getTexture(manager.objects[id].textureName)
     o.name = name or ""
     o.description = description or ""
     o.numButtons = 0
-    o.buttonNames = {"nil", "nil", "nil", "nil", "nil", "nil"}
+    o.buttonNames = {"", "", "", "", "", ""}
     o.onClickButton = nil
-    o.param1 = nil
-    o.param2 = nil
-    o.param3 = nil
-    o.param4 = nil
+    o.character = manager.panel.character
     o.manager = manager
 
     o.buttons = {}

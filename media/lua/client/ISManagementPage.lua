@@ -33,7 +33,7 @@ end
 ---@param width number Width of the object (same as the panel/page)
 ---@param id number ID of this object on the manager
 function ISManagementPage:addObjectToPage(preUIObject, pos, width, id)
-    local object = ISManagementObject:new(100*(pos-1), width, id, preUIObject.isoObject, preUIObject.name, preUIObject.description, self.manager)
+    local object = ISManagementObject:new(100*(pos-1), width, id, preUIObject.isoObject, preUIObject.objectType, preUIObject.name, preUIObject.description, self.manager)
     object:initialise()
     object:instantiate()
     self.objects[pos] = object

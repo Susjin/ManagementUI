@@ -57,7 +57,7 @@ local getCell = getCell
 ---@param managerTable ISUIManager
 ---@return ISUIManager
 function ISUIManager:reloadFromTable(managerTable)
-    local o = self:initialiseUIManager(managerTable.title, managerTable.maxObjects, managerTable.maxButtons, managerTable.ignoreScreenWidth, managerTable.showAllObjects, managerTable.refreshOnChange, managerTable.noObjectsMessage)
+    local o = self:new(managerTable.title, managerTable.maxObjects, managerTable.maxButtons, managerTable.ignoreScreenWidth, managerTable.showAllObjects, managerTable.refreshOnChange, managerTable.noObjectsMessage)
     o.numPages = managerTable.numPages
     o.objects = managerTable.objects
     o.numObjects = managerTable.numObjects
@@ -453,7 +453,7 @@ end
 ---@param refreshOnChange boolean If true, the panel will refresh the objects upon adding or removing a object from to manager
 ---@param noObjectsMessage string Message to be shown in the Tabs when there's no objects (320 character max)
 ---@return ISUIManager
-function ISUIManager:initialiseUIManager(title, maxObjects, maxButtons, ignoreScreenWidth, showAllObjects, refreshOnChange, noObjectsMessage)
+function ISUIManager:new(title, maxObjects, maxButtons, ignoreScreenWidth, showAllObjects, refreshOnChange, noObjectsMessage)
     ---@type ISUIManager
     local o = {}
     setmetatable(o, self)

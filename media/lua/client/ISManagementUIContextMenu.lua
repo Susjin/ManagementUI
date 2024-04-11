@@ -28,10 +28,10 @@ function ISManagementUIContextMenu.getUIManagerFromModData()
             end
         end
         if not found then
-            UIManager = ISUIManager:initialiseUIManager("TestManagementUI", 8, 6, false, false, false, "There are no objects now")
+            UIManager = ISUIManager:new("TestManagementUI", 8, 6, false, false, false, "There are no objects now")
         end
     else
-        UIManager = ISUIManager:initialiseUIManager("TestManagementUI", 8, 6, false, false, false, "There are no objects now")
+        UIManager = ISUIManager:new("TestManagementUI", 8, 6, false, false, false, "There are no objects now")
     end
 end
 

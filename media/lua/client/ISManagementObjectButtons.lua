@@ -6,8 +6,12 @@
 
 --- Main file with all functions related to the buttons of objects inside a Management Panel
 --- @class ObjectButtonsTest
+--- @field IsoDoor ManagementUIObjectProperties
 local ObjectButtons = {}
 ----------------------------------------------------------------------------------------------
+--- @class ManagementUIObjectProperties
+--- @field buttonNames String[]
+--- @field func function
 -- - In this file, you need to declare a function that will be executed
 -- - when a button of a specific type of object is clicked.
 -- -
@@ -20,7 +24,7 @@ local ObjectButtons = {}
 -- - Here's a Example:
 -- - ObjectButtons.IsoThumpable = {}
 -- - ObjectButtons.IsoThumpable.buttonNames = {"Open/Close", "Lock/Unlock"}
--- - ObjectButtons.IsoThumpable.function = function(thumpable, button, player, arg2, arg3, arg4)
+-- - ObjectButtons.IsoThumpable.func = function(thumpable, button, player, arg2, arg3, arg4)
 -- -     if button.internal == ObjectButtons.IsoThumpable.buttonNames[1] then
 -- -         thumpable:ToggleDoor(player)
 -- -     elseif button.internal == ObjectButtons.IsoThumpable.buttonNames[2] then
@@ -35,7 +39,19 @@ local ObjectButtons = {}
 -- - Use and develop using the pattern above to each Object
 -- - Type you want to use in your Management Panel
 
-
+ObjectButtons.IsoDoor = {}
+ObjectButtons.IsoDoor.buttonNames = { "Open/Close", "Lock/Unlock"}
+ObjectButtons.IsoDoor.func = function(door, button, player, arg2, arg3, arg4)
+    if button.internal == ObjectButtons.IsoDoor.buttonNames[1] then
+        door:ToggleDoor(player)
+    elseif button.internal == ObjectButtons.IsoDoor.buttonNames[2] then
+        if door:isLockedByKey() then
+            door:setLockedByKey(false)
+        else
+            door:setLockedByKey(true)
+        end
+    end
+end
 
 
 
