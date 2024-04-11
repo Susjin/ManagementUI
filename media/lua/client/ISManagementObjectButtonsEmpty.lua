@@ -8,6 +8,10 @@
 --- @class ObjectButtons
 local ObjectButtons = {}
 ----------------------------------------------------------------------------------------------
+--- @class ManagementUIObjectProperties
+--- @field buttonNames String[] A table containing the names (max 10 characters per name) for each button in a index. Also defines the amount of buttons
+--- @field func function The function that is executed every time a button in clicked on
+
 -- - In this file, you need to declare a function that will be executed
 -- - when a button of a specific type of object is clicked.
 -- -
@@ -20,7 +24,7 @@ local ObjectButtons = {}
 -- - Here's a Example:
 -- - ObjectButtons.IsoThumpable = {}
 -- - ObjectButtons.IsoThumpable.buttonNames = {"Open/Close", "Lock/Unlock"}
--- - ObjectButtons.IsoThumpable.function = function(thumpable, button, player, arg2, arg3, arg4)
+-- - ObjectButtons.IsoThumpable.func = function(thumpable, button, player)
 -- -     if button.internal == ObjectButtons.IsoThumpable.buttonNames[1] then
 -- -         thumpable:ToggleDoor(player)
 -- -     elseif button.internal == ObjectButtons.IsoThumpable.buttonNames[2] then
