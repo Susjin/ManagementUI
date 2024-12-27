@@ -163,7 +163,7 @@ function ISUIManager:validateObjects()
                 end
             end
         end
-        if obj.isoObject ~= nil then
+        if obj.isoObject ~= nil or self.showAllObjects then
             table.insert(newObjects, obj)
         end
     end
@@ -421,7 +421,7 @@ end
 ---@return table<string,number> Table containing the XYZ position of a square with the x, y and z indexes
 function ISUIManager.getObjectSquarePos(object)
     if object and instanceof(object, "IsoObject") then
-        local square = object.object:getSquare()
+        local square = object:getSquare()
         return {x = square:getX(), y = square:getY(), z = square:getZ()}
     else
         return {}

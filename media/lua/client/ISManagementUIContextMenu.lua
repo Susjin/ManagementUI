@@ -83,7 +83,7 @@ end
 
 function ISManagementUIContextMenu.addObject(object, button, player)
     if button.internal == "OK" then
-        UIManager:addObject(button.parent.entry:getText(), "", UIManager.getObjectSquarePos(object), object.type)
+        UIManager:addObject(button.parent.entry:getText(), "", UIManager.getObjectSquarePos(object.object), object.type)
 
         player:Say("Saved")
     end

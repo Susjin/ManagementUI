@@ -133,21 +133,27 @@ end
 
 function ISManagementObject:getObjectNumButtons()
     if ObjectButtons[self.objectType] then
-        return #ObjectButtons[self.objectType].buttonNames
+        if ObjectButtons[self.objectType].buttonNames then
+            return #ObjectButtons[self.objectType].buttonNames
+        end
     end
     return 0
 end
 
 function ISManagementObject:getObjectButtonNames()
     if ObjectButtons[self.objectType] then
-        return ObjectButtons[self.objectType].buttonNames
+        if ObjectButtons[self.objectType].buttonNames then
+            return ObjectButtons[self.objectType].buttonNames
+        end
     end
     return {"", "", "", "", "", ""}
 end
 
 function ISManagementObject:getObjectOnClickFunction()
     if ObjectButtons[self.objectType] then
-        return ObjectButtons[self.objectType].func
+        if ObjectButtons[self.objectType].func then
+            return ObjectButtons[self.objectType].func
+        end
     end
     return function(target, button, player) print(string.format("Function not found!\nPlayer: %s\nObject: %s\nButton: %s\n", player:getUsername(), target:getObjectName(), button.title)) end
 end
@@ -196,6 +202,11 @@ end
 function ISManagementObject:prerender()
     ISPanelJoypad.prerender(self)
 
+
+
+    --local square = getPlayer():getSquare(); print(string.format("Current Zone: %s\nCurrent Zone Type(1): %s\nCurrent Zone Type(2): %s", tostring(square:getZone()), square:getZone() and tostring(square:getZone():getType()) or "nil", tostring(square:getZoneType())))
+
+
     --Outline. Maybe?
     --self:drawTextureScaledAspect2(text, 4+1, 2-1, 50-4, 100-4, 1, 0, 0, 0)
     --self:drawTextureScaledAspect2(text, 4-1, 2-1, 50-4, 100-4, 1, 0, 0, 0)
@@ -203,7 +214,15 @@ function ISManagementObject:prerender()
     --self:drawTextureScaledAspect2(text, 4-1, 2+1, 50-4, 100-4, 1, 0, 0, 0)
 
     --Rendering Texture
-    self:drawTextureScaledAspect2(self.texture, 4, 2, 50-4, 100-4, 1, 1, 1, 1)
+    if self.isoObject then
+        self:drawTextureScaledAspect2(self.texture, 4, 2, 50-4, 100-4, 1, 1, 1, 1)
+    elseif self.texture then
+        self:drawTextureScaledAspect2(self.texture, 4, 2, 50-4, 100-4, 1, 0.25, 0.25, 0.25)
+    else
+        self:drawTextCentre("NOT", 27, 32, 1, 1, 1, 1, UIFont.NewSmall)
+        self:drawTextCentre("LOADED", 27, 48, 1, 1, 1, 1, UIFont.NewSmall)
+        --Draw something to notify player that this object is not loaded
+    end
 end
 
 
