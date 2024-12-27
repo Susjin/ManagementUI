@@ -107,6 +107,23 @@ function ISManagementObject:updateButtonOnClick(id, player)
     self.buttons[id]:setOnClick(tempOnClick, player, self)
 end
 
+---Enables or disables all buttons or a specific button
+---@param enable boolean True for enable, false for disable
+---@param buttonName string Name of the button that will change
+function ISManagementObject:toggleButtonEnable(enable, buttonName)
+    if buttonName then
+        for _, button in pairs(self.buttons) do
+            if button.title == buttonName then
+                button:setEnable(enable)
+            end
+        end
+    else
+        for _, button in pairs(self.buttons) do
+            button:setEnable(enable)
+        end
+    end
+end
+
 --[[**********************************************************************************]]--
 
 ------------------ Functions related to the RichTextPanel ------------------
@@ -184,6 +201,11 @@ function ISManagementObject:createChildren()
     end
     self:insertNewLineOfButtons(self.buttons[5], self.buttons[3], self.buttons[1])
     self:insertNewLineOfButtons(self.buttons[6], self.buttons[4], self.buttons[2])
+    if self.isoObject then
+        self:toggleButtonEnable(true)
+    else
+        self:toggleButtonEnable(false)
+    end
 
     --Creating and adding TextPanel as a child
     self.descriptionPanel = ISRichTextPanel:new(56, 0, (self.width) - (50 - 4) - (checkDescPanelWidth(self.numButtons)), 100)
@@ -221,7 +243,7 @@ function ISManagementObject:prerender()
     else
         self:drawTextCentre("NOT", 27, 32, 1, 1, 1, 1, UIFont.NewSmall)
         self:drawTextCentre("LOADED", 27, 48, 1, 1, 1, 1, UIFont.NewSmall)
-        --Draw something to notify player that this object is not loaded
+        --Draw something to notify player that this object was never loaded
     end
 end
 
